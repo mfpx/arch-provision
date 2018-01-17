@@ -1,7 +1,453 @@
-#!/user/bin/env bash
+#!/usr/bin/env bash
 # Bash "strict" mode
 set -euo pipefail
 IFS=$'\n\t'
 
-###
+### Global Variables
+
+# Colors
+Bold=$(tput bold)
+Underline=$(tput sgr 0 1)
+Reset=$(tput sgr0)
+Red=$(tput setaf 1)
+Green=$(tput setaf 2)
+Yellow=$(tput setaf 3)
+Blue=$(tput setaf 4)
+Purple=$(tput setaf 5)
+Cyan=$(tput setaf 6)
+White=$(tput setaf 7)
+
+# Bold Colors
+BRed=${Bold}${Red}
+BGreen=${Bold}${Green}
+BYellow=${Bold}${Yellow}
+BBlue=${Bold}${Blue}
+BPurple=${Bold}${Purple}
+BCyan=${Bold}${Cyan}
+BWhite=${Bold}${White}
+
+# Editor
+## TODO: Do I need this?
+if [[ -f /usr/bin/vim ]]; then
+    EDITOR="vim"
+elif [[ -f /usr/bin/vi ]]; then
+    EDITOR="vi"
+elif [[ -z $EDITOR ]]; then
+    EDITOR="nano"
+fi
+
+# Paths
+WORKING_DIR=`pwd`
+SCRIPT=`realpath $0`
+SCRIPT_PATH=`dirname $SCRIPT`
+LOG="{$WORKING_DIR/`basename ${0}`.log"
+[[ -f $LOG ]] && rm -f $LOG
+
+# Flags
+SYS_ARCH=`uname -m` # Architecture (x86_64)
+UEFI=0
+XPINGS=0 # CONNECTION CHECK
+
+# Script variables
+KEYMAP="us"
+MOUNTPOINT="/mnt"
+
+# User provided variables
+HOST_NAME="computer"
+KERNEL_VERSION="default"
+DUAL_DISK=0
+MAIN_DISK="/dev/sda"
+SECOND_DISK=""
+
+### Common Helper Functions
+
+print_line() {
+    printf "%$(tput cols)s\n"|tr ' ' '-'
+}
+
+print_title() {
+    clear
+    print_line
+    echo -e "# ${Bold}$1${Reset}"
+    print_line
+    echo ""
+}
+
+print_info() {
+    #Console width number
+    T_COLS=`tput cols`
+    echo -e "${Bold}$1${Reset}\n" | fold -sw $(( $T_COLS - 18 )) | sed 's/^/\t/'
+}
+
+print_warning() {
+    T_COLS=`tput cols`
+    echo -e "${BYellow}$1${Reset}\n" | fold -sw $(( $T_COLS - 1 ))
+}
+
+error_msg() {
+    echo -e "${Red}${1}${Reset}"
+    exit 1
+}
+
+pause_function() {
+    print_line
+    read -e -sn 1 -p "Press enter to continue..."
+}
+
+invalid_option() {
+    print_line
+    echo "Invalid option. Try another one."
+    pause_function
+}
+
+contains_element() {
+    #check if an element exist in a string
+    for e in "${@:2}"; do [[ $e == $1 ]] && break; done;
+}
+
+print_summary() {
+    print_title "Summary"
+    print_info "Below is a summary of your selections and any auto-detected system information.  If anything is wrong cancel out now with Ctrl-C.  If you continue the installation will begin and will only prompt again during user creation near the end."
+    echo ""
+    if [[ $UEFI = 1 ]]; then
+        echo "The machine architecture is $SYS_ARCH and UEFI has been found."
+    else
+        echo "The machine architecture is $SYS_ARCH and a BIOS has been found."
+    fi
+
+    echo "The hostname selected is $HOST_NAME"
+
+    case "$KERNEL_VERSION" in
+        "lts")
+            echo "The LTS kernel will be installed."
+            ;;
+        "hard")
+            echo "The hardened kernel will be installed."
+            ;;
+        *)
+            echo "The default kernel will be installed."
+            ;;
+    esac
+
+    echo ""
+    if [[ $DUAL_DISK = 0 ]]; then
+        echo "This is a single disk system so installation of all files will happen to $MAIN_DISK."
+    else
+        echo "This is a dual disk system."
+        echo "The main disk is $MAIN_DISK."
+        echo "The second disk is $SECOND_DISK."
+    fi
+
+    echo ""
+    pause_function
+}
+
+### Verification Functions
+
+check_root() {
+    if [[ "$(id -u)" != "0" ]]; then
+        error_msg "ERROR! You must execute the script as the 'root' user."
+    fi
+}
+
+check_archlinux() {
+    if [[ ! -e /etc/arch-release ]]; then
+        error_msg "ERROR! You must execute the script on Arch Linux."
+    fi
+}
+
+check_boot_system() {
+    if [[ "$(cat /sys/class/dmi/id/sys_vendor)" == 'Apple Inc.' ]] || [[ "$(cat /sys/class/dmi/id/sys_vendor)" == 'Apple Computer, Inc.' ]]; then
+        modprobe -r -q efivars || true  # if MAC
+    else
+        modprobe -q efivarfs            # all others
+    fi
+
+    if [[ -d "/sys/firmware/efi/" ]]; then
+        ## Mount efivarfs if it is not already mounted
+        if [[ -z $(mount | grep /sys/firmware/efi/efivars) ]]; then
+            mount -t efivarfs efivarfs /sys/firmware/efi/efivars
+        fi
+        UEFI=1
+    else
+        UEFI=0
+    fi
+}
+
+check_connection(){
+    XPINGS=$(( $XPINGS + 1 ))
+    connection_test() {
+        ping -q -w 1 -c 1 `ip r | grep default | awk 'NR==1 {print $3}'` &> /dev/null && return 1 || return 0
+    }
+    WIRED_DEV=`ip link | grep "ens\|eno\|enp" | awk '{print $2}'| sed 's/://' | sed '1!d'`
+    WIRELESS_DEV=`ip link | grep wlp | awk '{print $2}'| sed 's/://' | sed '1!d'`
+    if connection_test; then
+        print_warning "ERROR! Connection not Found."
+        print_info "Network Setup"
+        local _connection_opts=("Wired Automatic" "Wired Manual" "Wireless" "Configure Proxy" "Skip")
+        PS3="Enter your option: "
+        select CONNECTION_TYPE in "${_connection_opts[@]}"; do
+            case "$REPLY" in
+                1)
+                    systemctl start dhcpcd@${WIRED_DEV}.service
+                    break
+                    ;;
+                2)
+                    systemctl stop dhcpcd@${WIRED_DEV}.service
+                    read -p "IP Address: " IP_ADDR
+                    read -p "Submask: " SUBMASK
+                    read -p "Gateway: " GATEWAY
+                    ip link set ${WIRED_DEV} up
+                    ip addr add ${IP_ADDR}/${SUBMASK} dev ${WIRED_DEV}
+                    ip route add default via ${GATEWAY}
+                    $EDITOR /etc/resolv.conf
+                    break
+                    ;;
+                3)
+                    wifi-menu ${WIRELESS_DEV}
+                    break
+                    ;;
+                5)
+                    break
+                    ;;
+                *)
+                    invalid_option
+                    ;;
+            esac
+        done
+        if [[ $XPINGS -gt 2 ]]; then
+            print_warning "Can't establish connection. exiting..."
+            exit 1
+        fi
+        [[ $REPLY -ne 5 ]] && check_connection
+    fi
+}
+
+### Prompts / User interaction
+
+ask_for_hostname() {
+    print_title "Hostname"
+    print_info "Pick a hostname for this machine."
+    read -p "Hostname [ex: archlinux]: " HOST_NAME
+    if [[ $HOST_NAME = "" ]]; then
+        HOST_NAME="archlinux"
+    fi
+}
+
+ask_for_main_disk() {
+    print_title "Main Disk Selection"
+    print_info "Select which disk to use for the main installation (where root and boot will go)."
+    lsblk --nodeps --list --exclude 1,11,7 --output "name,size,type"
+    devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}'`);
+    echo ""
+    PS3="Enter your option: "
+    echo -e "Select main drive:\n"
+    select device in "${devices_list[@]}"; do
+        if contains_element "${device}" "${devices_list[@]}"; then
+            break
+        else
+            invalid_option
+        fi
+    done
+    MAIN_DISK=$device
+}
+
+ask_for_second_disk() {
+    print_title "Second Disk Selection"
+    print_info "This script can support a two-disk installation.  The file system layout is different in this case."
+    read -p "Do you want to use a dual disk setup? (y/N) " SELECT_SECOND
+    if [[ $SELECT_SECOND = "" ]]; then
+        SELECT_SECOND="N"
+    fi
+
+    if [[ $SELECT_SECOND = "n" ]] || [[ $SELECT_SECOND = "N" ]]; then
+        DUAL_DISK=0
+        SECOND_DISK=""
+        return
+    fi
+
+    lsblk --nodeps --list --exclude 1,11,7 --output "name,size,type"
+    devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -v $MAIN_DISK`);
+    echo ""
+    PS3="Enter your option: "
+    echo -e "Select second drive:\n"
+    select device in "${devices_list[@]}"; do
+        if contains_element "${device}" "${devices_list[@]}"; then
+            break
+        else
+            invalid_option
+        fi
+    done
+    DUAL_DISK=1
+    SECOND_DISK=$device
+}
+
+ask_for_kernel_level() {
+    print_title "Kernel Selection"
+    print_info "Select which linux kernel to install. The LTS version is generally prefered and more stable."
+    version_list=("linux (default)" "linux-lts (long term support)" "linux-hardened (security features)");
+    PS3="Enter your option: "
+    echo -e "Select linux version to install\n"
+    select VERSION in "${version_list[@]}"; do
+        if contains_element "$VERSION" "${version_list[@]}"; then
+            if [ "linux (default)" == "$VERSION" ];then
+                KERNEL_VERSION="default"
+            elif [ "linux-lts (long term support)" == "$VERSION" ];then
+                KERNEL_VERSION="lts"
+            elif [ "linux-hardened (security features)" == "$VERSION" ];then
+                KERNEL_VERSION="hard"
+            fi
+            break
+        else
+            invalid_option
+        fi
+    done
+}
+
+### Installation/configuration functions
+
+configure_mirrorlist(){
+    echo "Configuring repository mirrorlist"
+
+    url="https://www.archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on"
+
+    tmpfile=$(mktemp --suffix=-mirrorlist)
+
+    # Get latest mirror list and save to tmpfile
+    curl -so ${tmpfile} ${url}
+    sed -i 's/^#Server/Server/g' ${tmpfile}
+
+    # Backup and replace current mirrorlist file (if new file is non-zero)
+    if [[ -s ${tmpfile} ]]; then
+        echo "  Backing up the original mirrorlist..."
+        mv -i "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.orig"
+
+        echo "  Rotating the new list into place..."
+        mv -i ${tmpfile} "/etc/pacman.d/mirrorlist"
+    else
+      echo "  Unable to update, could not download list."
+    fi
+
+    # better repo should go first
+    cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.tmp
+    rankmirrors /etc/pacman.d/mirrorlist.tmp > /etc/pacman.d/mirrorlist
+    rm /etc/pacman.d/mirrorlist.tmp
+
+    # allow global read access (required for non-root yaourt execution)
+    chmod +r /etc/pacman.d/mirrorlist
+    #$EDITOR /etc/pacman.d/mirrorlist
+}
+
+unmount_partitions(){
+    mounted_partitions=(`lsblk | grep ${MOUNTPOINT} | awk '{print $7}' | sort -r`)
+    swapoff -a
+    for i in ${mounted_partitions[@]}; do
+        umount $i
+    done
+}
+
+create_partitions(){
+    echo "Creating partitions"
+
+    echo "  Main disk"
+    # Clear out the partitions
+    sgdisk --zap $MAIN_DISK
+    if [[ $UEFI = 1 ]]; then
+        # EFI & Boot partition (2gb)
+        sgdisk -n 1:2048:4196351 -c 1:"EFI" -t 1:ef00 $MAIN_DISK
+        # The rest of the disk is for LVM
+        sgdisk -n 2:4196352:0 -c 2:"LVM" -t 2:8e00 $MAIN_DISK
+    else
+        # BIOS partition (1mb)
+        sgdisk -n 1:2048:4095 -c 1:"BIOS" -t 1:ef02 $MAIN_DISK
+        # Boot partition (2gb)
+        sgdisk -n 2:4096:4198399 -c 2:"BOOT" -t 2:8300 $MAIN_DISK
+        # The rest of the disk is for LVM
+        sgdisk -n 3:4198400:0 -c 3:"LVM" -t 3:8e00 $MAIN_DISK
+    fi
+
+    if [[ $DUAL_DISK = 1 ]]; then
+        echo "  Second disk"
+        sgdisk --zip $SECOND_DISK
+        # LVM partition (entire disk)
+        sgdisk -n 1:2048:0 -c 1:"LVM_SECOND" -t 1:8e00 $SECOND_DISK
+    fi
+}
+
+setup_lvm() {
+    echo "Setting up LVM"
+
+    local MAIN_LVM=2
+    if [[ $UEFI = 0 ]]; then
+        MAIN_LVM=3
+    fi
+
+    pvcreate "${MAIN_DISK}${MAIN_LVM}"
+    vgcreate "main" "${MAIN_DISK}${MAIN_LVM}"
+
+    if [[ $DUAL_DISK = 0 ]]; then
+        lvcreate -l 10%VG "main" -n lv_var
+        lvcreate -l 30%VG "main" -n lv_root
+        lvcreate -l 40%VG "main" -n lv_home
+        lvcreate -l 10%VG "main" -n lv_data
+    else
+        pvcreate "${SECOND_DISK}1"
+        vgcreate "second" "${SECOND_DISK}1"
+
+        lvcreate -l 20%VG "main" -n lv_var
+        lvcreate -l 60%VG "main" -n lv_root
+        lvcreate -l 40%VG "second" -n lv_home
+        lvcreate -l 30%VG "second" -n lv_data
+    fi
+}
+
+format_partitions() {
+    echo "Formatting partitions"
+
+    if [[ $UEFI = 1 ]]; then
+        # The EFI partition
+        mkfs.vfat -F32 "${MAIN_DISK}1"
+    else
+        # The BOOT partition
+        mkfs.ext4 "${MAIN_DISK}2"
+    fi
+
+    # Now the LVM partitions...
+    mkfs.ext4 "/dev/mapper/main-lv_var"
+    mkfs.ext4 "/dev/mapper/main-lv_root"
+    mkfs.ext4 "/dev/mapper/main-lv_home"
+    mkfs.ext4 "/dev/mapper/main-lv_data"
+}
+
+### Main flow
+
+print_title "https://github.com/brennanfee/provision-arch"
+print_info "Provision Arch -> Automated script to install a base Arch system."
+echo "At any time press Ctrl-C to exit the script."
+pause_function
+
+check_root
+#check_archlinux
+check_boot_system
+check_connection
+
+loadkeys "$KEYMAP" # load the keymap
+
+## Ask questions
+ask_for_hostname
+ask_for_main_disk
+ask_for_second_disk
+ask_for_kernel_level
+
+print_summary
+
+pacman -Sy
+
+configure_mirrorlist
+
+unmount_partitions
+create_partitions
+setup_lvm
+format_partitions
+mount_partitions
 
