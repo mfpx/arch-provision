@@ -50,7 +50,6 @@ XPINGS=0 # CONNECTION CHECK
 
 # Script variables
 KEYMAP="us"
-MOUNTPOINT="/mnt"
 
 # User provided variables
 HOST_NAME="computer"
@@ -140,6 +139,14 @@ print_summary() {
 
     echo ""
     pause_function
+}
+
+is_package_installed() {
+    #check if a package is already installed
+    for PKG in $1; do
+        pacman -Q $PKG &> /dev/null && return 0;
+    done
+    return 1
 }
 
 ### Verification Functions
@@ -339,7 +346,7 @@ configure_mirrorlist(){
 }
 
 unmount_partitions(){
-    mounted_partitions=(`lsblk | grep ${MOUNTPOINT} | awk '{print $7}' | sort -r`)
+    mounted_partitions=(`lsblk | grep /mnt | awk '{print $7}' | sort -r`)
     swapoff -a
     for i in ${mounted_partitions[@]}; do
         umount $i
@@ -419,6 +426,135 @@ format_partitions() {
     mkfs.ext4 "/dev/mapper/main-lv_data"
 }
 
+mount_partitions() {
+    echo "Mounting partitions"
+
+    # First load the root
+    mount -t ext4 /dev/mapper/main-lv_root /mnt
+
+    # Create the paths for the other mounts
+    mkdir -p "/mnt/boot"
+    mkdir -p "/mnt/var"
+    mkdir -p "/mnt/home"
+    mkdir -p "/mnt/data"
+
+    if [[ $UEFI = 1 ]]; then
+        mount -t vfat "${MAIN_DISK}1" "/mnt/boot"
+    else
+        mount -t ext4 "${MAIN_DISK}2" "/mnt/boot"
+    fi
+
+    # Swap file
+    total_memory=`grep MemTotal /proc/meminfo | awk '{print ($2/1024)*1.5}' | sed 's/\..*//'`
+    fallocate -l ${total_memory}M /mnt/swapfile
+    chmod 600 /mnt/swapfile
+    mkswap /mnt/swapfile
+    swapon /mnt/swapfile
+
+    # Mount others
+    mount -t ext4 /dev/mapper/main-lv_var /mnt/var
+    mount -t ext4 /dev/mapper/main-lv_home /mnt/home
+    mount -t ext4 /dev/mapper/main-lv_data /mnt/data
+}
+
+install_base_system() {
+    echo "Installing base system"
+
+    pacman -Sy archlinux-keyring
+
+    # Install kernel
+    case "$KERNEL_VERSION" in
+        "lts")
+            pacman -Sg base | cut -d ' ' -f 2 | sed s/\^linux\$/linux-lts/g | pacstrap /mnt - linux-lts-headers
+            ;;
+        "hard")
+            pacman -Sg base | cut -d ' ' -f 2 | sed s/\^linux\$/linux-hardened/g | pacstrap /mnt - linux-hardened-headers
+            ;;
+        *)
+            pacstrap /mnt base linux-headers
+            ;;
+    esac
+
+    pacstrap /mnt base-devel parted btrfs-progs f2fs-tools net-tools
+    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+
+    local PTABLE=`parted -l | grep "gpt"`
+    [[ -n $PTABLE ]] && pacstrap /mnt gptfdisk
+
+    WIRELESS_DEV=`ip link | grep wl | awk '{print $2}' | sed 's/://' | sed '1!d'`
+    if [[ -n $WIRELESS_DEV ]]; then
+        pacstrap /mnt iw wireless_tools wpa_actiond wpa_supplicant dialog
+    fi
+
+    WIRED_DEV=`ip link | grep "ens\|eno\|enp" | awk '{print $2}' | sed 's/://' | sed '1!d'`
+    if [[ -n $WIRED_DEV ]]; then
+        arch_chroot "systemctl enable dhcpcd@${WIRED_DEV}.service"
+    fi
+
+    # Remaining tools
+    pacstrap /mnt git vim openssh
+}
+
+configure_keymap() {
+    echo "Configure keymap"
+    echo "KEYMAP=$KEYMAP" > /mnt/etc/vconsole.conf
+}
+
+configure_fstab() {
+    echo "Write fstab"
+
+    if [[ $UEFI -eq 1 ]]; then
+        genfstab -t PARTUUID -p /mnt >> /mnt/etc/fstab
+    else
+        genfstab -U -p /mnt >> /mnt/etc/fstab
+    fi
+}
+
+configure_hostname() {
+    echo "Setup hostname"
+
+    echo "$HOST_NAME" > /mnt/ect/hostname
+    arch_chroot "sed -i '/127.0.0.1/s/$/ '${HOST_NAME}'/' /etc/hosts"
+    arch_chroot "sed -i '/::1/s/$/ '${HOST_NAME}'/' /etc/hosts"
+}
+
+configure_timezone() {
+    echo "Configuring timezone"
+
+    arch_chroot "ln -sf /usr/share/zoneinfo/US/Central /etc/localtime"
+    arch_chroot "sed -i '/#NTP=/d' /etc/systemd/timesyncd.conf"
+    arch_chroot "sed -i 's/#Fallback//' /etc/systemd/timesyncd.conf"
+    arch_chroot "echo \"FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.fr.pool.ntp.org\" >> /etc/systemd/timesyncd.conf"
+    arch_chroot "systemctl enable systemd-timesyncd.service"
+}
+
+configure_clock() {
+    echo "Configuring clock"
+    arch_chroot "hwclock --systohc --utc";
+}
+
+configure_locale() {
+    echo "Configuring locale"
+    echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
+    arch_chroot "sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
+    arch_chroot "locale-gen"
+}
+
+configure_mkinitcpio() {
+    echo "Configuring mkinitcpio"
+
+    # if LUKS hooks: base systemd keyboard autodetect modconf block sd-vconsole sd-encrypt sd-lvm2 filesystems fsck
+    sed -i '/^HOOKS/c\HOOKS=(base systemd keyboard autodetect modconf block sd-lvm2 filesystems fsck)' /mnt/etc/mkinitcpio.conf
+
+    if [ "$(arch-chroot /mnt ls /boot | grep hardened -c)" -gt "0" ]; then
+        arch_chroot "mkinitcpio -p linux-hardened"
+    elif [ "$(arch-chroot /mnt ls /boot | grep lts -c)" -gt "0" ]; then
+        arch_chroot "mkinitcpio -p linux-lts"
+    else
+        arch_chroot "mkinitcpio -p linux"
+    fi
+}
+
 ### Main flow
 
 print_title "https://github.com/brennanfee/provision-arch"
@@ -450,4 +586,13 @@ create_partitions
 setup_lvm
 format_partitions
 mount_partitions
+
+install_base_system
+configure_keymap
+configure_fstab
+configure_hostname
+configure_timezone
+configure_clock
+configure_locale
+configure_mkinitcpio
 
