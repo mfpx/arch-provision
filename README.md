@@ -6,9 +6,7 @@ This script is not intended as a general purpose Arch installer but instead to r
 
 While this script is heavily tailored to my own preferences it should still be relatively simple for you to fork this repository and tweak the scripts to your desired needs.
 
-<aside class="warning">
 **WARNING**: As part of this installation, partitions will be created and file systems will be formatted.  This **WILL** result in data loss on the selected drives so make sure you either have them backed up or do not care about their contents.
-</aside>
 
 ## Installation
 
@@ -18,9 +16,7 @@ The installation is performed in three main sections.
 
 This part performs the main OS installation including partitioning drives, configuring locale, time zone, clock, setting up accounts, installing the bootloader, and install the minimum amount of software so the next step can proceed (mainly Git and Ansible).
 
-<aside class="warning">
 **WARNING**: Some consider downloading and executing a script from the web in a single command dangerous (and they are not wrong).  However, I consider this safe because I am solely in charge of the content in this repository (as you would be of your own fork).  As a result, it is just more convenient to do the execution with one line.  You are, of course, free to download the file, mark it executable, view or hash it for verification, then execute it with separate steps to ensure maximum security.  It's up to you.
-</aside>
 
 1. Boot from the Arch ISO (either USB or PXE).
 1. Set up a working internet connection (either wired or wireless).
