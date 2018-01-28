@@ -8,7 +8,7 @@ set -eu
 IFS=$'\n\t'
 
 ### Global Variables
-DEBUG=1
+DEBUG=0
 
 # Colors
 Bold=$(tput bold)
@@ -453,7 +453,7 @@ mount_partitions() {
     echo "Mounting partitions"
 
     # First load the root
-    mount -t ext4 /dev/mapper/vg_main-lv_root /mnt
+    mount -t ext4 -o defaults,rw,relatime,errors=remount-ro /dev/mapper/vg_main-lv_root /mnt
 
     # Create the paths for the other mounts
     mkdir -p "/mnt/boot"
@@ -462,9 +462,9 @@ mount_partitions() {
     mkdir -p "/mnt/data"
 
     if [[ $UEFI = 1 ]]; then
-        mount -t vfat "${MAIN_DISK}1" "/mnt/boot"
+        mount -t vfat -o defaults,rw,relatime,utf8,errors=remount-ro "${MAIN_DISK}1" "/mnt/boot"
     else
-        mount -t ext4 "${MAIN_DISK}2" "/mnt/boot"
+        mount -t ext4 -o defaults,rw,relatime,errors=remount-ro "${MAIN_DISK}2" "/mnt/boot"
     fi
 
     # Swap file
@@ -475,13 +475,13 @@ mount_partitions() {
     swapon /mnt/swapfile
 
     # Mount others
-    mount -t ext4 /dev/mapper/vg_main-lv_var /mnt/var
+    mount -t ext4 -o defaults,rw,relatime /dev/mapper/vg_main-lv_var /mnt/var
     if [[ $DUAL_DISK = 0 ]]; then
-        mount -t ext4 /dev/mapper/vg_main-lv_home /mnt/home
-        mount -t ext4 /dev/mapper/vg_main-lv_data /mnt/data
+        mount -t ext4 -o defaults,rw,relatime /dev/mapper/vg_main-lv_home /mnt/home
+        mount -t ext4 -o defaults,rw,relatime /dev/mapper/vg_main-lv_data /mnt/data
     else
-        mount -t ext4 /dev/mapper/vg_second-lv_home /mnt/home
-        mount -t ext4 /dev/mapper/vg_second-lv_data /mnt/data
+        mount -t ext4 -o defaults,rw,relatime /dev/mapper/vg_second-lv_home /mnt/home
+        mount -t ext4 -o defaults,rw,relatime /dev/mapper/vg_second-lv_data /mnt/data
     fi
 }
 
@@ -503,7 +503,7 @@ install_base_system() {
             ;;
     esac
 
-    pacstrap /mnt base-devel parted btrfs-progs f2fs-tools net-tools
+    pacstrap /mnt base-devel parted btrfs-progs f2fs-tools net-tools dosfstools
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
 
     local PTABLE=`parted -l | grep "gpt"`
@@ -536,6 +536,7 @@ configure_fstab() {
     else
         genfstab -U -p /mnt >> /mnt/etc/fstab
     fi
+    [[ -f /mnt/swapfile ]] && sed -i "s/\\/mnt//" /mnt/etc/fstab
 }
 
 configure_hostname() {
@@ -552,7 +553,7 @@ configure_timezone() {
     arch_chroot "ln -sf /usr/share/zoneinfo/US/Central /etc/localtime"
     arch_chroot "sed -i '/#NTP=/d' /etc/systemd/timesyncd.conf"
     arch_chroot "sed -i 's/#Fallback//' /etc/systemd/timesyncd.conf"
-    arch_chroot "echo \"FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.fr.pool.ntp.org\" >> /etc/systemd/timesyncd.conf"
+    arch_chroot "echo \"FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.us.pool.ntp.org\" >> /etc/systemd/timesyncd.conf"
     arch_chroot "systemctl enable systemd-timesyncd.service"
 }
 
@@ -565,6 +566,7 @@ configure_locale() {
     echo "Configuring locale"
     echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
     arch_chroot "sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
+    arch_chroot "sed -i 's/#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
     arch_chroot "locale-gen"
 }
 
@@ -587,7 +589,7 @@ install_bootloader() {
     echo "Install bootloader"
 
     if [[ $UEFI -eq 1 ]]; then
-        pacstrap /mnt efibootmgr dosfstools
+        pacstrap /mnt efibootmgr
     else
         pactstrap /mnt grub os-prober
     fi
