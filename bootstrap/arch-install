@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Author: Brennan Fee
+#
 # Bash "strict" mode
 set -euo pipefail
 IFS=$'\n\t'
@@ -390,21 +392,21 @@ setup_lvm() {
     fi
 
     pvcreate "${MAIN_DISK}${MAIN_LVM}"
-    vgcreate "main" "${MAIN_DISK}${MAIN_LVM}"
+    vgcreate "vg_main" "${MAIN_DISK}${MAIN_LVM}"
 
     if [[ $DUAL_DISK = 0 ]]; then
-        lvcreate -l 10%VG "main" -n lv_var
-        lvcreate -l 30%VG "main" -n lv_root
-        lvcreate -l 40%VG "main" -n lv_home
-        lvcreate -l 10%VG "main" -n lv_data
+        lvcreate -l 10%VG "vg_main" -n lv_var
+        lvcreate -l 30%VG "vg_main" -n lv_root
+        lvcreate -l 40%VG "vg_main" -n lv_home
+        lvcreate -l 10%VG "vg_main" -n lv_data
     else
         pvcreate "${SECOND_DISK}1"
-        vgcreate "second" "${SECOND_DISK}1"
+        vgcreate "vg_second" "${SECOND_DISK}1"
 
-        lvcreate -l 20%VG "main" -n lv_var
-        lvcreate -l 60%VG "main" -n lv_root
-        lvcreate -l 40%VG "second" -n lv_home
-        lvcreate -l 30%VG "second" -n lv_data
+        lvcreate -l 20%VG "vg_main" -n lv_var
+        lvcreate -l 60%VG "vg_main" -n lv_root
+        lvcreate -l 40%VG "vg_second" -n lv_home
+        lvcreate -l 30%VG "vg_second" -n lv_data
     fi
 }
 
@@ -420,17 +422,22 @@ format_partitions() {
     fi
 
     # Now the LVM partitions...
-    mkfs.ext4 "/dev/mapper/main-lv_var"
-    mkfs.ext4 "/dev/mapper/main-lv_root"
-    mkfs.ext4 "/dev/mapper/main-lv_home"
-    mkfs.ext4 "/dev/mapper/main-lv_data"
+    mkfs.ext4 "/dev/mapper/vg_main-lv_var"
+    mkfs.ext4 "/dev/mapper/vg_main-lv_root"
+    if [[ $DUAL_DISK = 0 ]]; then
+        mkfs.ext4 "/dev/mapper/vg_main-lv_home"
+        mkfs.ext4 "/dev/mapper/vg_main-lv_data"
+    else
+        mkfs.ext4 "/dev/mapper/vg_second-lv_home"
+        mkfs.ext4 "/dev/mapper/vg_second-lv_data"
+    fi
 }
 
 mount_partitions() {
     echo "Mounting partitions"
 
     # First load the root
-    mount -t ext4 /dev/mapper/main-lv_root /mnt
+    mount -t ext4 /dev/mapper/vg_main-lv_root /mnt
 
     # Create the paths for the other mounts
     mkdir -p "/mnt/boot"
@@ -452,9 +459,14 @@ mount_partitions() {
     swapon /mnt/swapfile
 
     # Mount others
-    mount -t ext4 /dev/mapper/main-lv_var /mnt/var
-    mount -t ext4 /dev/mapper/main-lv_home /mnt/home
-    mount -t ext4 /dev/mapper/main-lv_data /mnt/data
+    mount -t ext4 /dev/mapper/vg_main-lv_var /mnt/var
+    if [[ $DUAL_DISK = 0 ]]; then
+        mount -t ext4 /dev/mapper/vg_main-lv_home /mnt/home
+        mount -t ext4 /dev/mapper/vg_main-lv_data /mnt/data
+    else
+        mount -t ext4 /dev/mapper/vg_second-lv_home /mnt/home
+        mount -t ext4 /dev/mapper/vg_second-lv_data /mnt/data
+    fi
 }
 
 install_base_system() {
@@ -492,7 +504,7 @@ install_base_system() {
     fi
 
     # Remaining tools
-    pacstrap /mnt git vim openssh
+    pacstrap /mnt git vim openssh ansible
 }
 
 configure_keymap() {
@@ -555,6 +567,40 @@ configure_mkinitcpio() {
     fi
 }
 
+install_bootloader() {
+    echo "Install bootloader"
+
+    if [[ $UEFI -eq 1 ]]; then
+        pacstrap /mnt efibootmgr dosfstools
+    else
+        pactstrap /mnt grub os-prober
+    fi
+}
+
+configure_bootloader() {
+    echo "Configure bootloader"
+
+    if [[ $UEFI -eq 1 ]]; then
+        arch_chroot "bootctl --path=/boot install"
+        echo -e "title\tArch Linux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\noptions\troot=\/dev\/mapper\/vg_main-lv_root rw" > /mnt/boot/loader/entries/arch.conf
+        echo -e "default  arch\ntimeout 5" > /mnt/boot/loader/loader.conf
+    else
+        arch_chroot "grub-install --target=i386-pc --recheck --debug /dev/sda"
+        arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
+    fi
+}
+
+root_password() {
+    print_title "ROOT PASSWORD"
+    print_warning "Enter your new root password"
+    arch_chroot "passwd"
+}
+
+wrap_up() {
+    print_title "INSTALL COMPLETED"
+    print_warning "After reboot you can configure users, install software.\nGenerally I pull an Ansible repository to then configure the machine."
+}
+
 ### Main flow
 
 print_title "https://github.com/brennanfee/provision-arch"
@@ -563,7 +609,7 @@ echo "At any time press Ctrl-C to exit the script."
 pause_function
 
 check_root
-#check_archlinux
+check_archlinux
 check_boot_system
 check_connection
 
@@ -577,7 +623,7 @@ ask_for_kernel_level
 
 print_summary
 
-pacman -Sy
+pacman -Syy
 
 configure_mirrorlist
 
@@ -595,4 +641,10 @@ configure_timezone
 configure_clock
 configure_locale
 configure_mkinitcpio
+
+install_bootloader
+configure_bootloader
+
+root_password
+wrap_up
 
