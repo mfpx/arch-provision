@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Author: Brennan Fee
 #
-# Bash "strict" mode
-set -euo pipefail
+# Bash "strict" mode, -o pipefail removed
+set -eu
 IFS=$'\n\t'
 
 ### Global Variables
+DEBUG=1
 
 # Colors
 Bold=$(tput bold)
@@ -95,6 +96,12 @@ pause_function() {
     read -e -sn 1 -p "Press enter to continue..."
 }
 
+pause_if_debug() {
+    if [[ $DEBUG = 1 ]]; then
+        read -e -sn 1 -p "PAUSED - Press ener to continue..."
+    fi
+}
+
 invalid_option() {
     print_line
     echo "Invalid option. Try another one."
@@ -154,6 +161,8 @@ is_package_installed() {
 ### Verification Functions
 
 check_root() {
+    echo "Checking root permissions..."
+
     if [[ "$(id -u)" != "0" ]]; then
         error_msg "ERROR! You must execute the script as the 'root' user."
     fi
@@ -188,8 +197,8 @@ check_connection(){
     connection_test() {
         ping -q -w 1 -c 1 `ip r | grep default | awk 'NR==1 {print $3}'` &> /dev/null && return 1 || return 0
     }
-    WIRED_DEV=`ip link | grep "ens\|eno\|enp" | awk '{print $2}'| sed 's/://' | sed '1!d'`
-    WIRELESS_DEV=`ip link | grep wlp | awk '{print $2}'| sed 's/://' | sed '1!d'`
+    WIRED_DEV=`ip link | grep "ens\|eno\|enp" | awk '{print $2}' | sed 's/://' | sed '1!d'`
+    WIRELESS_DEV=`ip link | grep wlp | awk '{print $2}' | sed 's/://' | sed '1!d'`
     if connection_test; then
         print_warning "ERROR! Connection not Found."
         print_info "Network Setup"
@@ -609,7 +618,7 @@ echo "At any time press Ctrl-C to exit the script."
 pause_function
 
 check_root
-check_archlinux
+#check_archlinux
 check_boot_system
 check_connection
 
@@ -626,25 +635,42 @@ print_summary
 pacman -Syy
 
 configure_mirrorlist
+pause_if_debug
 
 unmount_partitions
+pause_if_debug
 create_partitions
+pause_if_debug
 setup_lvm
+pause_if_debug
 format_partitions
+pause_if_debug
 mount_partitions
+pause_if_debug
 
 install_base_system
+pause_if_debug
 configure_keymap
+pause_if_debug
 configure_fstab
+pause_if_debug
 configure_hostname
+pause_if_debug
 configure_timezone
+pause_if_debug
 configure_clock
+pause_if_debug
 configure_locale
+pause_if_debug
 configure_mkinitcpio
+pause_if_debug
 
 install_bootloader
+pause_if_debug
 configure_bootloader
+pause_if_debug
 
 root_password
+pause_if_debug
 wrap_up
 
