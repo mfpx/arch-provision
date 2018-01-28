@@ -259,24 +259,38 @@ ask_for_hostname() {
 }
 
 ask_for_main_disk() {
-    print_title "Main Disk Selection"
-    print_info "Select which disk to use for the main installation (where root and boot will go)."
-    lsblk --nodeps --list --exclude 1,11,7 --output "name,size,type"
+    echo "Determining main disk..."
     devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}'`);
-    echo ""
-    PS3="Enter your option: "
-    echo -e "Select main drive:\n"
-    select device in "${devices_list[@]}"; do
-        if contains_element "${device}" "${devices_list[@]}"; then
-            break
-        else
-            invalid_option
-        fi
-    done
+
+    if [[ ${devices_list[@]} = 1 ]]; then
+        device=${devices_list[0]}
+    else
+        print_title "Main Disk Selection"
+        print_info "Select which disk to use for the main installation (where root and boot will go)."
+        lsblk --nodeps --list --exclude 1,11,7 --output "name,size,type"
+        echo ""
+        PS3="Enter your option: "
+        echo -e "Select main drive:\n"
+        select device in "${devices_list[@]}"; do
+            if contains_element "${device}" "${devices_list[@]}"; then
+                break
+            else
+                invalid_option
+            fi
+        done
+    fi
     MAIN_DISK=$device
 }
 
 ask_for_second_disk() {
+    devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -v $MAIN_DISK`);
+
+    if [[ ${devices_list[@]} == 0 ]]; then
+        DUAL_DISK=0
+        SECOND_DISK=""
+        return
+    fi
+
     print_title "Second Disk Selection"
     print_info "This script can support a two-disk installation.  The file system layout is different in this case."
     read -p "Do you want to use a dual disk setup? (y/N) " SELECT_SECOND
@@ -302,6 +316,7 @@ ask_for_second_disk() {
             invalid_option
         fi
     done
+
     DUAL_DISK=1
     SECOND_DISK=$device
 }
