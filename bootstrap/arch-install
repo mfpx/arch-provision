@@ -541,7 +541,7 @@ configure_fstab() {
 configure_hostname() {
     echo "Setup hostname"
 
-    echo "$HOST_NAME" > /mnt/ect/hostname
+    echo "$HOST_NAME" > /mnt/etc/hostname
     arch_chroot "sed -i '/127.0.0.1/s/$/ '${HOST_NAME}'/' /etc/hosts"
     arch_chroot "sed -i '/::1/s/$/ '${HOST_NAME}'/' /etc/hosts"
 }
