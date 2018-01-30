@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Author: Brennan Fee
 #
-# URL to install: curl -fsSL https://git.io/vNDOZ | /bin/bash
+# URL to install: bash <(curl -fsSL https://git.io/vNDOZ)
 #
 # Bash "strict" mode, -o pipefail removed
 set -eu

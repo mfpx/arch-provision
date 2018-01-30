@@ -22,8 +22,8 @@ This part performs the main OS installation including partitioning drives, confi
 1. Set up a working internet connection (either wired or wireless).
     * This may be done automatically by the Arch ISO but if not use the [Arch Wiki](https://wiki.archlinux.org) for steps to initialize a network connection.
 1. Download and run the desired script.
-    * For arch-install: `curl -fsSL https://git.io/vNDOZ | /bin/bash`
-    * For arch-install-encrypted: `curl -fsSL https://git.io/VNDOn | /bin/bash`
+    * For arch-install: `bash <(curl -fsSL https://git.io/vNDOZ)`
+    * For arch-install-encrypted: `bash <(curl -fsSL https://git.io/VNDOn)`
 1. Reboot
 
 ### Section 2 - System Configuration And Application Installation
