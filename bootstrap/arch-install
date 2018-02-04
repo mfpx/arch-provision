@@ -262,7 +262,7 @@ ask_for_main_disk() {
     echo "Determining main disk..."
     devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}'`);
 
-    if [[ ${devices_list[@]} = 1 ]]; then
+    if [[ ${#devices_list[@]} = 1 ]]; then
         device=${devices_list[0]}
     else
         print_title "Main Disk Selection"
@@ -283,9 +283,9 @@ ask_for_main_disk() {
 }
 
 ask_for_second_disk() {
-    devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -v $MAIN_DISK`);
+    device_count=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -vc $MAIN_DISK || true`);
 
-    if [[ ${devices_list[@]} == 0 ]]; then
+    if [[ $device_count = 0 ]]; then
         DUAL_DISK=0
         SECOND_DISK=""
         return
