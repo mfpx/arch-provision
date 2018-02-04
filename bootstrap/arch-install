@@ -536,6 +536,9 @@ install_base_system() {
 
     # Remaining tools
     pacstrap /mnt git vim openssh ansible
+
+    # Set the ssh service to be enabled
+    arch_chroot "systemctl enable sshd.service"
 }
 
 configure_keymap() {
@@ -629,6 +632,15 @@ root_password() {
     arch_chroot "passwd"
 }
 
+setup_ansible_account() {
+    print_title "ANSIBLE ACCOUNT"
+    print_warning "Enter the password for the ansible account"
+
+    arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
+    arch_chroot "chfn ansible"
+    arch_chroot "passwd ansible"
+}
+
 wrap_up() {
     print_title "INSTALL COMPLETED"
     print_warning "After reboot you can configure users, install software.\nGenerally I pull an Ansible repository to then configure the machine."
@@ -695,6 +707,8 @@ configure_bootloader
 pause_if_debug
 
 root_password
+pause_if_debug
+setup_ansible_account
 pause_if_debug
 wrap_up
 
