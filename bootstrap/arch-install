@@ -606,7 +606,7 @@ configure_bootloader() {
     echo "Configure bootloader"
 
     if [[ $UEFI -eq 1 ]]; then
-        arch_chroot "grub-install --target=x86_64-efi --efi-direcotry=/boot --bootloader-id=grub"
+        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=grub"
     else
         arch_chroot "grub-install --target=i386-pc --recheck --debug /dev/sda"
     fi
