@@ -626,6 +626,39 @@ configure_bootloader() {
     fi
 }
 
+configure_sudo() {
+    echo "Configuring sudo..."
+    arch_chroot "cp -v /etc/sudoers /etc/sudoers.orig"
+    ## Uncomment to allow members of group wheel to execute any command
+    arch_chroot "sed -i '/%wheel ALL=(ALL) ALL/s/^# //' /etc/sudoers"
+}
+
+configure_pacman() {
+    echo "Configuring pacman..."
+    arch_chroot "cp -v /etc/pacman.conf /etc/pacman.conf.orig"
+
+    # Set up multilib
+    ARCHI=`uname -m`
+    if [[ $ARCHI == x86_64 ]]; then
+        local _has_multilib=`grep -n "\[multilib\]" /mnt/etc/pacman.conf | cut -f1 -d:`
+        if [[ -z $_has_multilib ]]; then
+            echo -e "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
+            echo -e '\nMultilib repository added into pacman.conf file'
+        else
+            sed -i "${_has_multilib}s/^#//" /mnt/etc/pacman.conf
+            local _has_multilib=$(( ${_has_multilib} + 1 ))
+            sed -i "${_has_multilib}s/^#//" /mnt/etc/pacman.conf
+        fi
+    fi
+
+    # Setup archlinuxfr repository
+    local _has_fr=`grep -n "\[archlinuxfr\]" /mnt/etc/pacman.conf | cut -f1 -d:`
+    if [[ -z $_has_multilib ]]; then
+        echo -e "\n[archlinuxfr]\nSigLevel = Never\nServer = https://repo.archlinux.fr/\$arch" >> /mnt/etc/pacman.conf
+        echo -e '\nArchlinuxfr repository added into pacman.conf file'
+    fi
+}
+
 root_password() {
     print_title "ROOT PASSWORD"
     print_warning "Enter your new root password"
@@ -637,8 +670,8 @@ setup_ansible_account() {
     print_warning "Enter the password for the ansible account"
 
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
-    arch_chroot "chfn ansible -f Ansible"
     arch_chroot "passwd ansible"
+    arch_chroot "chfn ansible -f Ansible"
 }
 
 wrap_up() {
@@ -650,7 +683,9 @@ wrap_up() {
 
 print_title "https://github.com/brennanfee/provision-arch"
 print_info "Provision Arch -> Automated script to install a base Arch system."
-echo "At any time press Ctrl-C to exit the script."
+print_line
+echo "Script can be cancelled at any time with CTRL+C"
+print_line
 pause_function
 
 check_root
@@ -704,6 +739,11 @@ pause_if_debug
 install_bootloader
 pause_if_debug
 configure_bootloader
+pause_if_debug
+
+configure_sudo
+pause_if_debug
+configure_pacman
 pause_if_debug
 
 root_password
