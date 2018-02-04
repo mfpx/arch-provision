@@ -637,7 +637,7 @@ setup_ansible_account() {
     print_warning "Enter the password for the ansible account"
 
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
-    arch_chroot "chfn ansible"
+    arch_chroot "chfn ansible -f Ansible"
     arch_chroot "passwd ansible"
 }
 
@@ -654,7 +654,7 @@ echo "At any time press Ctrl-C to exit the script."
 pause_function
 
 check_root
-#check_archlinux
+check_archlinux
 check_boot_system
 check_connection
 
