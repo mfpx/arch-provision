@@ -638,7 +638,7 @@ configure_pacman() {
 
     # Setup archlinuxfr repository
     local _has_fr=`grep -n "\[archlinuxfr\]" /mnt/etc/pacman.conf | cut -f1 -d:`
-    if [[ -z $_has_multilib ]]; then
+    if [[ -z $_has_fr ]]; then
         echo -e "\n[archlinuxfr]\nSigLevel = Never\nServer = https://repo.archlinux.fr/\$arch" >> /mnt/etc/pacman.conf
         echo -e '\nArchlinuxfr repository added into pacman.conf file'
     fi
