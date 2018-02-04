@@ -100,7 +100,7 @@ pause_function() {
 
 pause_if_debug() {
     if [[ $DEBUG = 1 ]]; then
-        read -e -sn 1 -p "PAUSED - Press ener to continue..."
+        read -e -sn 1 -p "PAUSED - Press enter to continue..."
     fi
 }
 
@@ -648,9 +648,6 @@ root_password() {
     print_title "ROOT PASSWORD"
     print_warning "Enter your new root password"
     arch_chroot "passwd"
-    while [[ $? -ne 0 ]]; do
-        arch_chroot "passwd"
-    done
 }
 
 setup_ansible_account() {
@@ -659,9 +656,6 @@ setup_ansible_account() {
 
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
     arch_chroot "passwd ansible"
-    while [[ $? -ne 0 ]]; do
-        arch_chroot "passwd ansible"
-    done
     arch_chroot "chfn ansible -f Ansible"
 }
 
