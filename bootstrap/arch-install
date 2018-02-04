@@ -596,7 +596,7 @@ configure_mkinitcpio() {
 install_bootloader() {
     echo "Install bootloader"
 
-    pactstrap /mnt grub os-prober
+    pacstrap /mnt grub os-prober
     if [[ $UEFI -eq 1 ]]; then
         pacstrap /mnt efibootmgr
     fi
