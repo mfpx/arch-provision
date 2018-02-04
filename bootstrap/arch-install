@@ -394,16 +394,14 @@ create_partitions(){
     sgdisk --zap $MAIN_DISK
     if [[ $UEFI = 1 ]]; then
         # EFI & Boot partition (2gb)
-        sgdisk -n 1:2048:4196351 -c 1:"EFI" -t 1:ef00 $MAIN_DISK
+        sgdisk -n 1:2048:4196351 -c 1:"BOOT" -t 1:ef00 $MAIN_DISK
         # The rest of the disk is for LVM
         sgdisk -n 2:4196352:0 -c 2:"LVM" -t 2:8e00 $MAIN_DISK
     else
         # BIOS partition (1mb)
         sgdisk -n 1:2048:4095 -c 1:"BIOS" -t 1:ef02 $MAIN_DISK
-        # Boot partition (2gb)
-        sgdisk -n 2:4096:4198399 -c 2:"BOOT" -t 2:8300 $MAIN_DISK
         # The rest of the disk is for LVM
-        sgdisk -n 3:4198400:0 -c 3:"LVM" -t 3:8e00 $MAIN_DISK
+        sgdisk -n 2:4096:0 -c 2:"LVM" -t 2:8e00 $MAIN_DISK
     fi
 
     if [[ $DUAL_DISK = 1 ]]; then
@@ -417,13 +415,8 @@ create_partitions(){
 setup_lvm() {
     echo "Setting up LVM"
 
-    local MAIN_LVM=2
-    if [[ $UEFI = 0 ]]; then
-        MAIN_LVM=3
-    fi
-
-    pvcreate "${MAIN_DISK}${MAIN_LVM}"
-    vgcreate "vg_main" "${MAIN_DISK}${MAIN_LVM}"
+    pvcreate "${MAIN_DISK}2"
+    vgcreate "vg_main" "${MAIN_DISK}2"
 
     if [[ $DUAL_DISK = 0 ]]; then
         lvcreate -l 10%VG "vg_main" -n lv_var
@@ -436,7 +429,7 @@ setup_lvm() {
 
         lvcreate -l 20%VG "vg_main" -n lv_var
         lvcreate -l 60%VG "vg_main" -n lv_root
-        lvcreate -l 40%VG "vg_second" -n lv_home
+        lvcreate -l 50%VG "vg_second" -n lv_home
         lvcreate -l 30%VG "vg_second" -n lv_data
     fi
 }
@@ -445,11 +438,9 @@ format_partitions() {
     echo "Formatting partitions"
 
     if [[ $UEFI = 1 ]]; then
-        # The EFI partition
-        mkfs.vfat -F32 "${MAIN_DISK}1"
-    else
-        # The BOOT partition
-        mkfs.ext4 "${MAIN_DISK}2"
+        # Format the EFI partition
+        #mkfs.vfat -F32 "${MAIN_DISK}1"
+        mkfs.ext4 "${MAIN_DISK}1"
     fi
 
     # Now the LVM partitions...
@@ -478,8 +469,6 @@ mount_partitions() {
 
     if [[ $UEFI = 1 ]]; then
         mount -t vfat -o defaults,rw,relatime,utf8,errors=remount-ro "${MAIN_DISK}1" "/mnt/boot"
-    else
-        mount -t ext4 -o defaults,rw,relatime,errors=remount-ro "${MAIN_DISK}2" "/mnt/boot"
     fi
 
     # Swap file
@@ -606,10 +595,9 @@ configure_mkinitcpio() {
 install_bootloader() {
     echo "Install bootloader"
 
+    pactstrap /mnt grub os-prober
     if [[ $UEFI -eq 1 ]]; then
         pacstrap /mnt efibootmgr
-    else
-        pactstrap /mnt grub os-prober
     fi
 }
 
@@ -617,13 +605,12 @@ configure_bootloader() {
     echo "Configure bootloader"
 
     if [[ $UEFI -eq 1 ]]; then
-        arch_chroot "bootctl --path=/boot install"
-        echo -e "title\tArch Linux\nlinux\t/vmlinuz-linux\ninitrd\t/initramfs-linux.img\noptions\troot=\/dev\/mapper\/vg_main-lv_root rw" > /mnt/boot/loader/entries/arch.conf
-        echo -e "default  arch\ntimeout 5" > /mnt/boot/loader/loader.conf
+        arch_chroot "grub-install --target=x86_64-efi --efi-direcotry=/boot --bootloader-id=grub"
     else
         arch_chroot "grub-install --target=i386-pc --recheck --debug /dev/sda"
-        arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
     fi
+
+    arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
 
 configure_sudo() {
@@ -638,8 +625,7 @@ configure_pacman() {
     arch_chroot "cp -v /etc/pacman.conf /etc/pacman.conf.orig"
 
     # Set up multilib
-    ARCHI=`uname -m`
-    if [[ $ARCHI == x86_64 ]]; then
+    if [[ $SYS_ARCH == x86_64 ]]; then
         local _has_multilib=`grep -n "\[multilib\]" /mnt/etc/pacman.conf | cut -f1 -d:`
         if [[ -z $_has_multilib ]]; then
             echo -e "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
