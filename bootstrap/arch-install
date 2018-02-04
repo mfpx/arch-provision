@@ -118,7 +118,6 @@ contains_element() {
 print_summary() {
     print_title "Summary"
     print_info "Below is a summary of your selections and any auto-detected system information.  If anything is wrong cancel out now with Ctrl-C.  If you continue the installation will begin and will only prompt again during user creation near the end."
-    echo ""
     print_line
     if [[ $UEFI = 1 ]]; then
         echo "The machine architecture is $SYS_ARCH and UEFI has been found."
@@ -469,7 +468,8 @@ mount_partitions() {
     mkdir -p "/mnt/data"
 
     if [[ $UEFI = 1 ]]; then
-        mount -t vfat -o defaults,rw,relatime,utf8,errors=remount-ro "${MAIN_DISK}1" "/mnt/boot"
+        #mount -t vfat -o defaults,rw,relatime,utf8,errors=remount-ro "${MAIN_DISK}1" "/mnt/boot"
+        mount -t ext4 -o defaults,rw,relatime,errors=remount-ro "${MAIN_DISK}1" "/mnt/boot"
     fi
 
     # Swap file
