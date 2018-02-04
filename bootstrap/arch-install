@@ -119,6 +119,7 @@ print_summary() {
     print_title "Summary"
     print_info "Below is a summary of your selections and any auto-detected system information.  If anything is wrong cancel out now with Ctrl-C.  If you continue the installation will begin and will only prompt again during user creation near the end."
     echo ""
+    print_line
     if [[ $UEFI = 1 ]]; then
         echo "The machine architecture is $SYS_ARCH and UEFI has been found."
     else
@@ -649,6 +650,9 @@ root_password() {
     print_title "ROOT PASSWORD"
     print_warning "Enter your new root password"
     arch_chroot "passwd"
+    while [[ $? -ne 0 ]]; do
+        arch_chroot "passwd"
+    done
 }
 
 setup_ansible_account() {
@@ -657,6 +661,9 @@ setup_ansible_account() {
 
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
     arch_chroot "passwd ansible"
+    while [[ $? -ne 0 ]]; do
+        arch_chroot "passwd ansible"
+    done
     arch_chroot "chfn ansible -f Ansible"
 }
 
@@ -671,7 +678,6 @@ print_title "https://github.com/brennanfee/provision-arch"
 print_info "Provision Arch -> Automated script to install a base Arch system."
 print_line
 echo "Script can be cancelled at any time with CTRL+C"
-print_line
 pause_function
 
 check_root
