@@ -621,7 +621,7 @@ configure_sudo() {
 
 configure_pacman() {
     echo "Configuring pacman..."
-    arch_chroot "cp -v /etc/pacman.conf /etc/pacman.conf.orig"
+    cp -v /mnt/etc/pacman.conf /mnt/etc/pacman.conf.orig
 
     # Set up multilib
     if [[ $SYS_ARCH == x86_64 ]]; then
@@ -642,6 +642,12 @@ configure_pacman() {
         echo -e "\n[archlinuxfr]\nSigLevel = Never\nServer = https://repo.archlinux.fr/\$arch" >> /mnt/etc/pacman.conf
         echo -e '\nArchlinuxfr repository added into pacman.conf file'
     fi
+}
+
+pull_repo() {
+    echo "Pulling repo"
+    mkdir -p /mnt/srv/provision-arch
+    arch_chroot "git clone https://github.com/brennanfee/provision-arch.git /srv/provision-arch"
 }
 
 root_password() {
@@ -728,6 +734,8 @@ pause_if_debug
 configure_sudo
 pause_if_debug
 configure_pacman
+pause_if_debug
+pull_repo
 pause_if_debug
 
 root_password
