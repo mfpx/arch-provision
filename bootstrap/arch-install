@@ -419,16 +419,16 @@ setup_lvm() {
     vgcreate "vg_main" "${MAIN_DISK}2"
 
     if [[ $DUAL_DISK = 0 ]]; then
-        lvcreate -l 10%VG "vg_main" -n lv_var
-        lvcreate -l 30%VG "vg_main" -n lv_root
+        lvcreate -l 5%VG "vg_main" -n lv_var
+        lvcreate -l 40%VG "vg_main" -n lv_root
         lvcreate -l 40%VG "vg_main" -n lv_home
-        lvcreate -l 10%VG "vg_main" -n lv_data
+        lvcreate -l 5%VG "vg_main" -n lv_data
     else
         pvcreate "${SECOND_DISK}1"
         vgcreate "vg_second" "${SECOND_DISK}1"
 
-        lvcreate -l 20%VG "vg_main" -n lv_var
-        lvcreate -l 60%VG "vg_main" -n lv_root
+        lvcreate -l 10%VG "vg_main" -n lv_var
+        lvcreate -l 70%VG "vg_main" -n lv_root
         lvcreate -l 50%VG "vg_second" -n lv_home
         lvcreate -l 30%VG "vg_second" -n lv_data
     fi
