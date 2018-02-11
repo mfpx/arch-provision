@@ -357,7 +357,7 @@ ask_for_passwords() {
         pwd1=""
         pwd2=""
         read -sp "Root password: " pwd1
-        read -sp "Once again: " pwd2
+        read -sp "\nOnce again: " pwd2
 
         if [[ $pwd1 = $pwd2 ]]; then
             ROOT_PWD=$pwd1
@@ -369,19 +369,19 @@ ask_for_passwords() {
 
     # Now the Ansible user
     was_set="false"
-    echo ""
+    echo "\n"
     echo "Now the Ansible account..."
     while [[ $was_set = "false" ]]; do
         pwd1=""
         pwd2=""
         read -sp "Ansible password: " pwd1
-        read -sp "Once again: " pwd2
+        read -sp "\nOnce again: " pwd2
 
         if [[ $pwd1 = $pwd2 ]]; then
             ANSIBLE_PWD=$pwd1
             was_set="true"
         else
-            echo "They didn't match... try again.\n"
+            echo "\nThey didn't match... try again.\n"
         fi
     done
 }
