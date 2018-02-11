@@ -64,6 +64,11 @@ print_title() {
     echo ""
 }
 
+print_title_info() {
+    T_COLS=`tput cols`
+    echo -e "${Bold}$1${Reset}\n" | fold -sw $(( $T_COLS - 18 )) | sed 's/^/\t/'
+}
+
 print_status() {
     T_COLS=`tput cols`
     echo -e "$1${Reset}" | fold -sw $(( $T_COLS - 1 ))
@@ -71,17 +76,17 @@ print_status() {
 
 print_info() {
     T_COLS=`tput cols`
-    echo -e "${Bold}$1${Reset}\n" | fold -sw $(( $T_COLS - 18 )) | sed 's/^/\t/'
+    echo -e "${Bold}$1${Reset}" | fold -sw $(( $T_COLS - 1 ))
 }
 
 print_warning() {
     T_COLS=`tput cols`
-    echo -e "${BYellow}$1${Reset}\n" | fold -sw $(( $T_COLS - 1 ))
+    echo -e "${BYellow}$1${Reset}" | fold -sw $(( $T_COLS - 1 ))
 }
 
 print_success() {
     T_COLS=`tput cols`
-    echo -e "${BGreen}$1${Reset}\n" | fold -sw $(( $T_COLS - 1 ))
+    echo -e "${BGreen}$1${Reset}" | fold -sw $(( $T_COLS - 1 ))
 }
 
 error_msg() {
@@ -103,7 +108,7 @@ pause_if_debug() {
 
 invalid_option() {
     print_line
-    print_warning "Invalid option. Try another one."
+    print_warning "Invalid option. Try again."
 }
 
 contains_element() {
@@ -113,7 +118,7 @@ contains_element() {
 
 print_summary() {
     print_title "Summary"
-    print_info "Below is a summary of your selections and any auto-detected system information.  If anything is wrong cancel out now with Ctrl-C.  If you continue the installation will begin and will only prompt again during user creation near the end."
+    print_title_info "Below is a summary of your selections and any auto-detected system information.  If anything is wrong cancel out now with Ctrl-C.  If you continue the installation will begin and will only prompt again during user creation near the end."
     print_line
     if [[ $UEFI = 1 ]]; then
         print_status "The machine architecture is $SYS_ARCH and UEFI has been found."
@@ -246,7 +251,7 @@ check_connection(){
 
 ask_for_hostname() {
     print_title "Hostname"
-    print_info "Pick a hostname for this machine."
+    print_title_info "Pick a hostname for this machine."
     read -p "Hostname [ex: archlinux]: " HOST_NAME
     if [[ $HOST_NAME = "" ]]; then
         HOST_NAME="archlinux"
@@ -261,7 +266,7 @@ ask_for_main_disk() {
         device=${devices_list[0]}
     else
         print_title "Main Disk Selection"
-        print_info "Select which disk to use for the main installation (where root and boot will go)."
+        print_title_info "Select which disk to use for the main installation (where root and boot will go)."
         lsblk --nodeps --list --exclude 1,11,7 --output "name,size,type"
         blank_line
         PS3="Enter your option: "
@@ -287,7 +292,7 @@ ask_for_second_disk() {
     fi
 
     print_title "Second Disk Selection"
-    print_info "This script can support a two-disk installation.  The file system layout is different in this case."
+    print_title_info "This script can support a two-disk installation.  The file system layout is different in this case."
     read -n 1 -p "Do you want to use a dual disk setup? (y/N) " SELECT_SECOND
     if [[ $SELECT_SECOND = "" ]]; then
         SELECT_SECOND="N"
@@ -318,7 +323,7 @@ ask_for_second_disk() {
 
 ask_for_kernel_level() {
     print_title "Kernel Selection"
-    print_info "Select which linux kernel to install. The LTS version is generally prefered and more stable."
+    print_title_info "Select which linux kernel to install. The LTS version is generally prefered and more stable."
     version_list=("linux (default kernel)" "linux-lts (long term support, recommended)" "linux-hardened (security features)");
     blank_line
     PS3="Enter your option: "
@@ -341,7 +346,7 @@ ask_for_kernel_level() {
 
 ask_for_passwords() {
     print_title "User Accounts"
-    print_info "By default this script sets up the root account and an Ansible account."
+    print_title_info "By default this script sets up the root account and an Ansible account."
 
     was_set="false"
 
@@ -705,15 +710,15 @@ setup_ansible_account() {
 
 wrap_up() {
     print_title "INSTALL COMPLETED"
-    print_warning "After reboot you can configure users, install software."
-    print_warning "This script pulled its Github repo containing my Ansible scripts to /srv/provision-arch."
-    print_warning "Generally after rebooting I run Ansible to fully install and configure the machine."
+    print_success "After reboot you can configure users, install software."
+    print_success "This script pulled its Github repo containing Ansible scripts to /srv/provision-arch."
+    print_success "Generally after rebooting I run Ansible to fully install and configure the machine."
 }
 
 ### Main flow
 
 print_title "https://github.com/brennanfee/provision-arch"
-print_info "Provision Arch -> Automated script to install a base Arch system."
+print_title_info "Provision Arch -> Automated script to install a base Arch system."
 print_line
 print_status "Script can be cancelled at any time with CTRL+C"
 pause_function
