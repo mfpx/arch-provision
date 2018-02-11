@@ -53,7 +53,7 @@ print_line() {
 }
 
 blank_line() {
-    echo -e ""
+    echo -e "\n"
 }
 
 print_title() {
@@ -358,7 +358,7 @@ ask_for_passwords() {
         pwd1=""
         pwd2=""
         read -sp "Root password: " pwd1
-        blank_line
+        echo -e ""
         read -sp "Once again: " pwd2
 
         if [[ $pwd1 = $pwd2 ]]; then
@@ -378,7 +378,7 @@ ask_for_passwords() {
         pwd1=""
         pwd2=""
         read -sp "Ansible password: " pwd1
-        blank_line
+        echo -e ""
         read -sp "Once again: " pwd2
 
         if [[ $pwd1 = $pwd2 ]]; then
