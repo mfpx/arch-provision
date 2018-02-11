@@ -10,36 +10,19 @@ IFS=$'\n\t'
 ### Global Variables
 DEBUG=0
 
-# Colors
+# Text modifiers
 Bold=$(tput bold)
-Underline=$(tput sgr 0 1)
 Reset=$(tput sgr0)
+
+# Colors
 Red=$(tput setaf 1)
 Green=$(tput setaf 2)
 Yellow=$(tput setaf 3)
-Blue=$(tput setaf 4)
-Purple=$(tput setaf 5)
-Cyan=$(tput setaf 6)
-White=$(tput setaf 7)
 
 # Bold Colors
 BRed=${Bold}${Red}
 BGreen=${Bold}${Green}
 BYellow=${Bold}${Yellow}
-BBlue=${Bold}${Blue}
-BPurple=${Bold}${Purple}
-BCyan=${Bold}${Cyan}
-BWhite=${Bold}${White}
-
-# Editor
-## TODO: Do I need this?
-if [[ -f /usr/bin/vim ]]; then
-    EDITOR="vim"
-elif [[ -f /usr/bin/vi ]]; then
-    EDITOR="vi"
-elif [[ -z $EDITOR ]]; then
-    EDITOR="nano"
-fi
 
 # Paths
 WORKING_DIR=`pwd`
@@ -53,7 +36,6 @@ SYS_ARCH=`uname -m` # Architecture (x86_64)
 UEFI=0
 XPINGS=0 # CONNECTION CHECK
 KEYMAP="us"
-
 
 # User provided variables
 HOST_NAME="computer"
@@ -70,6 +52,10 @@ print_line() {
     printf "%$(tput cols)s\n"|tr ' ' '-'
 }
 
+blank_line() {
+    echo -e "\n"
+}
+
 print_title() {
     clear
     print_line
@@ -78,8 +64,12 @@ print_title() {
     echo ""
 }
 
+print_status() {
+    T_COLS=`tput cols`
+    echo -e "$1${Reset}\n" | fold -sw $(( $T_COLS - 1 ))
+}
+
 print_info() {
-    #Console width number
     T_COLS=`tput cols`
     echo -e "${Bold}$1${Reset}\n" | fold -sw $(( $T_COLS - 18 )) | sed 's/^/\t/'
 }
@@ -89,8 +79,14 @@ print_warning() {
     echo -e "${BYellow}$1${Reset}\n" | fold -sw $(( $T_COLS - 1 ))
 }
 
+print_success() {
+    T_COLS=`tput cols`
+    echo -e "${BGreen}$1${Reset}\n" | fold -sw $(( $T_COLS - 1 ))
+}
+
 error_msg() {
-    echo -e "${Red}${1}${Reset}"
+    T_COLS=`tput cols`
+    echo -e "${BRed}$1${Reset}\n" | fold -sw $(( $T_COLS - 1 ))
     exit 1
 }
 
@@ -101,14 +97,13 @@ pause_function() {
 
 pause_if_debug() {
     if [[ $DEBUG = 1 ]]; then
-        read -e -sn 1 -p "PAUSED - Press enter to continue..."
+        read -e -sn 1 -p "DEBUG - Press enter to continue..."
     fi
 }
 
 invalid_option() {
     print_line
-    echo "Invalid option. Try another one."
-    pause_function
+    print_warning "Invalid option. Try another one."
 }
 
 contains_element() {
@@ -121,35 +116,35 @@ print_summary() {
     print_info "Below is a summary of your selections and any auto-detected system information.  If anything is wrong cancel out now with Ctrl-C.  If you continue the installation will begin and will only prompt again during user creation near the end."
     print_line
     if [[ $UEFI = 1 ]]; then
-        echo "The machine architecture is $SYS_ARCH and UEFI has been found."
+        print_status "The machine architecture is $SYS_ARCH and UEFI has been found."
     else
-        echo "The machine architecture is $SYS_ARCH and a BIOS has been found."
+        print_status "The machine architecture is $SYS_ARCH and a BIOS has been found."
     fi
 
-    echo "The hostname selected is $HOST_NAME"
+    print_status "The hostname selected is $HOST_NAME"
 
     case "$KERNEL_VERSION" in
         "lts")
-            echo "The LTS kernel will be installed."
+            print_status "The LTS kernel will be installed."
             ;;
         "hard")
-            echo "The hardened kernel will be installed."
+            print_status "The hardened kernel will be installed."
             ;;
         *)
-            echo "The default kernel will be installed."
+            print_status "The default kernel will be installed."
             ;;
     esac
 
-    echo ""
+    blank_line
     if [[ $DUAL_DISK = 0 ]]; then
-        echo "This is a single disk system so installation of all files will happen to $MAIN_DISK."
+        print_status "This is a single disk system so installation of all files will happen to $MAIN_DISK."
     else
-        echo "This is a dual disk system."
-        echo "The main disk is $MAIN_DISK."
-        echo "The second disk is $SECOND_DISK."
+        print_status "This is a dual disk system."
+        print_status "The main disk is $MAIN_DISK."
+        print_status "The second disk is $SECOND_DISK."
     fi
 
-    echo ""
+    blank_line
     pause_function
 }
 
@@ -168,7 +163,7 @@ is_package_installed() {
 ### Verification Functions
 
 check_root() {
-    echo "Checking root permissions..."
+    print_info "Checking root permissions..."
 
     if [[ "$(id -u)" != "0" ]]; then
         error_msg "ERROR! You must execute the script as the 'root' user."
@@ -225,7 +220,6 @@ check_connection(){
                     ip link set ${WIRED_DEV} up
                     ip addr add ${IP_ADDR}/${SUBMASK} dev ${WIRED_DEV}
                     ip route add default via ${GATEWAY}
-                    $EDITOR /etc/resolv.conf
                     break
                     ;;
                 3)
@@ -260,7 +254,7 @@ ask_for_hostname() {
 }
 
 ask_for_main_disk() {
-    echo "Determining main disk..."
+    print_info "Determining main disk..."
     devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}'`);
 
     if [[ ${#devices_list[@]} = 1 ]]; then
@@ -269,7 +263,7 @@ ask_for_main_disk() {
         print_title "Main Disk Selection"
         print_info "Select which disk to use for the main installation (where root and boot will go)."
         lsblk --nodeps --list --exclude 1,11,7 --output "name,size,type"
-        echo ""
+        blank_line
         PS3="Enter your option: "
         echo -e "Select main drive:\n"
         select device in "${devices_list[@]}"; do
@@ -307,7 +301,7 @@ ask_for_second_disk() {
 
     lsblk --nodeps --list --exclude 1,11,7 --output "name,size,type"
     devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -v $MAIN_DISK`);
-    echo ""
+    blank_line
     PS3="Enter your option: "
     echo -e "Select second drive:\n"
     select device in "${devices_list[@]}"; do
@@ -325,7 +319,8 @@ ask_for_second_disk() {
 ask_for_kernel_level() {
     print_title "Kernel Selection"
     print_info "Select which linux kernel to install. The LTS version is generally prefered and more stable."
-    version_list=("linux (default)" "linux-lts (long term support)" "linux-hardened (security features)");
+    version_list=("linux (default kernel)" "linux-lts (long term support)" "linux-hardened (security features)");
+    blank_line
     PS3="Enter your option: "
     echo -e "Select linux version to install\n"
     select VERSION in "${version_list[@]}"; do
@@ -351,8 +346,8 @@ ask_for_passwords() {
     was_set="false"
 
     # Root first
-    echo ""
-    echo "Root first..."
+    blank_line
+    print_status "Root first..."
     while [[ $was_set = "false" ]]; do
         pwd1=""
         pwd2=""
@@ -363,14 +358,14 @@ ask_for_passwords() {
             ROOT_PWD=$pwd1
             was_set="true"
         else
-            echo "They didn't match... try again.\n"
+            print_warning "They didn't match... try again."
         fi
     done
 
     # Now the Ansible user
     was_set="false"
-    echo "\n"
-    echo "Now the Ansible account..."
+    blank_line
+    print_status "Now the Ansible account..."
     while [[ $was_set = "false" ]]; do
         pwd1=""
         pwd2=""
@@ -381,7 +376,7 @@ ask_for_passwords() {
             ANSIBLE_PWD=$pwd1
             was_set="true"
         else
-            echo "\nThey didn't match... try again.\n"
+            print_warning "They didn't match... try again."
         fi
     done
 }
@@ -389,7 +384,7 @@ ask_for_passwords() {
 ### Installation/configuration functions
 
 configure_mirrorlist(){
-    echo "Configuring repository mirrorlist"
+    print_info "Configuring repository mirrorlist"
 
     url="https://www.archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on"
 
@@ -401,14 +396,14 @@ configure_mirrorlist(){
 
     # Backup and replace current mirrorlist file (if new file is non-zero)
     if [[ -s ${tmpfile} ]]; then
-        echo "  Backing up the original mirrorlist..."
+        print_status "    Backing up the original mirrorlist..."
         rm -f "/etc/pacman.d/mirrorlist.orig"
         mv -i "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.orig"
 
-        echo "  Rotating the new list into place..."
+        print_status "    Rotating the new list into place..."
         mv -i ${tmpfile} "/etc/pacman.d/mirrorlist"
     else
-      echo "  Unable to update, could not download list."
+      print_warning "    Unable to update, could not download list."
     fi
 
     # better repo should go first
@@ -418,7 +413,6 @@ configure_mirrorlist(){
 
     # allow global read access (required for non-root yaourt execution)
     chmod +r /etc/pacman.d/mirrorlist
-    #$EDITOR /etc/pacman.d/mirrorlist
 }
 
 unmount_partitions(){
@@ -430,9 +424,9 @@ unmount_partitions(){
 }
 
 create_partitions(){
-    echo "Creating partitions"
+    print_info "Creating partitions"
 
-    echo "  Main disk"
+    print_status "    Main disk"
     # Clear out the partitions
     sgdisk --zap $MAIN_DISK
     if [[ $UEFI = 1 ]]; then
@@ -448,7 +442,7 @@ create_partitions(){
     fi
 
     if [[ $DUAL_DISK = 1 ]]; then
-        echo "  Second disk"
+        print_status "    Second disk"
         sgdisk --zip $SECOND_DISK
         # LVM partition (entire disk)
         sgdisk -n 1:2048:0 -c 1:"LVM_SECOND" -t 1:8e00 $SECOND_DISK
@@ -456,7 +450,7 @@ create_partitions(){
 }
 
 setup_lvm() {
-    echo "Setting up LVM"
+    print_info "Setting up LVM"
 
     pvcreate "${MAIN_DISK}2"
     vgcreate "vg_main" "${MAIN_DISK}2"
@@ -478,7 +472,7 @@ setup_lvm() {
 }
 
 format_partitions() {
-    echo "Formatting partitions"
+    print_info "Formatting partitions"
 
     if [[ $UEFI = 1 ]]; then
         # Format the EFI partition
@@ -498,7 +492,7 @@ format_partitions() {
 }
 
 mount_partitions() {
-    echo "Mounting partitions"
+    print_info "Mounting partitions"
 
     # First load the root
     mount -t ext4 -o defaults,rw,relatime,errors=remount-ro /dev/mapper/vg_main-lv_root /mnt
@@ -532,7 +526,7 @@ mount_partitions() {
 }
 
 install_base_system() {
-    echo "Installing base system"
+    print_info "Installing base system"
 
     pacman -Sy --noconfirm archlinux-keyring
 
@@ -573,12 +567,12 @@ install_base_system() {
 }
 
 configure_keymap() {
-    echo "Configure keymap"
+    print_info "Configure keymap"
     echo "KEYMAP=$KEYMAP" > /mnt/etc/vconsole.conf
 }
 
 configure_fstab() {
-    echo "Write fstab"
+    print_info "Write fstab"
 
     if [[ $UEFI -eq 1 ]]; then
         genfstab -t PARTUUID -p /mnt >> /mnt/etc/fstab
@@ -589,7 +583,7 @@ configure_fstab() {
 }
 
 configure_hostname() {
-    echo "Setup hostname"
+    print_info "Setup hostname"
 
     echo "$HOST_NAME" > /mnt/etc/hostname
     arch_chroot "sed -i '/127.0.0.1/s/$/ '${HOST_NAME}'/' /etc/hosts"
@@ -597,7 +591,7 @@ configure_hostname() {
 }
 
 configure_timezone() {
-    echo "Configuring timezone"
+    print_info "Configuring timezone"
 
     arch_chroot "ln -sf /usr/share/zoneinfo/US/Central /etc/localtime"
     arch_chroot "sed -i '/#NTP=/d' /etc/systemd/timesyncd.conf"
@@ -607,12 +601,12 @@ configure_timezone() {
 }
 
 configure_clock() {
-    echo "Configuring clock"
+    print_info "Configuring clock"
     arch_chroot "hwclock --systohc --utc";
 }
 
 configure_locale() {
-    echo "Configuring locale"
+    print_info "Configuring locale"
     echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
     arch_chroot "sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
     arch_chroot "sed -i 's/#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
@@ -620,7 +614,7 @@ configure_locale() {
 }
 
 configure_mkinitcpio() {
-    echo "Configuring mkinitcpio"
+    print_info "Configuring mkinitcpio"
 
     # if LUKS hooks: base systemd keyboard autodetect modconf block sd-vconsole sd-encrypt sd-lvm2 filesystems fsck
     sed -i '/^HOOKS/c\HOOKS=(base systemd keyboard autodetect modconf block sd-lvm2 filesystems fsck)' /mnt/etc/mkinitcpio.conf
@@ -635,7 +629,7 @@ configure_mkinitcpio() {
 }
 
 install_bootloader() {
-    echo "Install bootloader"
+    print_info "Install bootloader"
 
     pacstrap /mnt grub os-prober
     if [[ $UEFI -eq 1 ]]; then
@@ -644,7 +638,7 @@ install_bootloader() {
 }
 
 configure_bootloader() {
-    echo "Configure bootloader"
+    print_info "Configure bootloader"
 
     if [[ $UEFI -eq 1 ]]; then
         arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub"
@@ -656,14 +650,14 @@ configure_bootloader() {
 }
 
 configure_sudo() {
-    echo "Configuring sudo..."
+    print_info "Configuring sudo..."
     arch_chroot "cp -v /etc/sudoers /etc/sudoers.orig"
     ## Uncomment to allow members of group wheel to execute any command
     arch_chroot "sed -i '/%wheel ALL=(ALL) ALL/s/^# //' /etc/sudoers"
 }
 
 configure_pacman() {
-    echo "Configuring pacman..."
+    print_info "Configuring pacman..."
     cp -v /mnt/etc/pacman.conf /mnt/etc/pacman.conf.orig
 
     # Set up multilib
@@ -688,29 +682,18 @@ configure_pacman() {
 }
 
 pull_repo() {
-    echo "Pulling repo"
+    print_info "Pulling repo"
     mkdir -p /mnt/srv/provision-arch
     arch_chroot "git clone https://github.com/brennanfee/provision-arch.git /srv/provision-arch"
 }
 
 root_password() {
-#    print_title "ROOT PASSWORD"
-#    print_warning "Enter your new root password"
-#    arch_chroot "passwd"
-
-    echo "Setting up root account"
+    print_info "Setting up root account"
     arch_chroot "echo -n root:$ROOT_PWD | chpasswd -c SHA512"
 }
 
 setup_ansible_account() {
-    #print_title "ANSIBLE ACCOUNT"
-    #print_warning "Enter the password for the ansible account"
-
-    #arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
-    #arch_chroot "passwd ansible"
-    #arch_chroot "chfn ansible -f Ansible"
-
-    echo "Setting up Ansible account"
+    print_info "Setting up Ansible account"
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
     arch_chroot "echo -n ansible:$ANSIBLE_PWD | chpasswd -c SHA512"
     arch_chroot "chfn ansible -f Ansible"
@@ -718,7 +701,9 @@ setup_ansible_account() {
 
 wrap_up() {
     print_title "INSTALL COMPLETED"
-    print_warning "After reboot you can configure users, install software.\nGenerally I pull an Ansible repository to then configure the machine."
+    print_warning "After reboot you can configure users, install software."
+    print_warning "This script pulled its Github repo containing my Ansible scripts to /srv/provision-arch."
+    print_warning "Generally after rebooting I run Ansible to fully install and configure the machine."
 }
 
 ### Main flow
@@ -726,7 +711,7 @@ wrap_up() {
 print_title "https://github.com/brennanfee/provision-arch"
 print_info "Provision Arch -> Automated script to install a base Arch system."
 print_line
-echo "Script can be cancelled at any time with CTRL+C"
+print_status "Script can be cancelled at any time with CTRL+C"
 pause_function
 
 check_root
