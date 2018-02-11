@@ -294,7 +294,7 @@ ask_for_second_disk() {
 
     print_title "Second Disk Selection"
     print_info "This script can support a two-disk installation.  The file system layout is different in this case."
-    read -p "Do you want to use a dual disk setup? (y/N) " SELECT_SECOND
+    read -n 1 -p "Do you want to use a dual disk setup? (y/N) " SELECT_SECOND
     if [[ $SELECT_SECOND = "" ]]; then
         SELECT_SECOND="N"
     fi
@@ -351,11 +351,13 @@ ask_for_passwords() {
     was_set="false"
 
     # Root first
+    echo ""
+    echo "Root first..."
     while [[ $was_set = "false" ]]; do
         pwd1=""
         pwd2=""
-        read -p "Root password: " pwd1
-        read -p "Once again: " pwd2
+        read -sp "Root password: " pwd1
+        read -sp "Once again: " pwd2
 
         if [[ $pwd1 = $pwd2 ]]; then
             ROOT_PWD=$pwd1
@@ -367,11 +369,13 @@ ask_for_passwords() {
 
     # Now the Ansible user
     was_set="false"
+    echo ""
+    echo "Now the Ansible account..."
     while [[ $was_set = "false" ]]; do
         pwd1=""
         pwd2=""
-        read -p "Ansible password: " pwd1
-        read -p "Once again: " pwd2
+        read -sp "Ansible password: " pwd1
+        read -sp "Once again: " pwd2
 
         if [[ $pwd1 = $pwd2 ]]; then
             ANSIBLE_PWD=$pwd1
@@ -695,7 +699,7 @@ root_password() {
 #    arch_chroot "passwd"
 
     echo "Setting up root account"
-    arch_chroot "echo -n root:$ROOT_PWD | chpasswd -S -c SHA512"
+    arch_chroot "echo -n root:$ROOT_PWD | chpasswd -c SHA512"
 }
 
 setup_ansible_account() {
@@ -708,7 +712,7 @@ setup_ansible_account() {
 
     echo "Setting up Ansible account"
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
-    arch_chroot "echo -n ansible:$ANSIBLE_PWD | chpasswd -S -c SHA512"
+    arch_chroot "echo -n ansible:$ANSIBLE_PWD | chpasswd -c SHA512"
     arch_chroot "chfn ansible -f Ansible"
 }
 
