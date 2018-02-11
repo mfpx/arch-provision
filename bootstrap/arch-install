@@ -736,6 +736,7 @@ ask_for_hostname
 ask_for_main_disk
 ask_for_second_disk
 ask_for_kernel_level
+ask_for_passwords
 
 print_summary
 
