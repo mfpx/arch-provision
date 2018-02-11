@@ -53,7 +53,7 @@ print_line() {
 }
 
 blank_line() {
-    echo -e "\n"
+    echo -e ""
 }
 
 print_title() {
@@ -118,7 +118,7 @@ contains_element() {
 
 print_summary() {
     print_title "Summary"
-    print_title_info "Below is a summary of your selections and any auto-detected system information.  If anything is wrong cancel out now with Ctrl-C.  If you continue the installation will begin and will only prompt again during user creation near the end."
+    print_title_info "Below is a summary of your selections and any auto-detected system information.  If anything is wrong cancel out now with Ctrl-C.  If you continue the installation will begin and there will be no more input required."
     print_line
     if [[ $UEFI = 1 ]]; then
         print_status "The machine architecture is $SYS_ARCH and UEFI has been found."
@@ -209,7 +209,7 @@ check_connection(){
     if connection_test; then
         print_warning "ERROR! Connection not Found."
         print_info "Network Setup"
-        local _connection_opts=("Wired Automatic" "Wired Manual" "Wireless" "Configure Proxy" "Skip")
+        local _connection_opts=("Wired Automatic" "Wired Manual" "Wireless" "Skip")
         PS3="Enter your option: "
         select CONNECTION_TYPE in "${_connection_opts[@]}"; do
             case "$REPLY" in
@@ -231,7 +231,8 @@ check_connection(){
                     wifi-menu ${WIRELESS_DEV}
                     break
                     ;;
-                5)
+                4)
+                    error_msg "No network setup, exiting."
                     break
                     ;;
                 *)
@@ -330,9 +331,9 @@ ask_for_kernel_level() {
     echo -e "Select linux version to install\n"
     select VERSION in "${version_list[@]}"; do
         if contains_element "$VERSION" "${version_list[@]}"; then
-            if [ "linux (default)" == "$VERSION" ];then
+            if [ "linux (default kernel)" == "$VERSION" ];then
                 KERNEL_VERSION="default"
-            elif [ "linux-lts (long term support)" == "$VERSION" ];then
+            elif [ "linux-lts (long term support, recommended)" == "$VERSION" ];then
                 KERNEL_VERSION="lts"
             elif [ "linux-hardened (security features)" == "$VERSION" ];then
                 KERNEL_VERSION="hard"
