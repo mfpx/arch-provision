@@ -707,6 +707,12 @@ setup_ansible_account() {
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
     arch_chroot "echo -n ansible:$ANSIBLE_PWD | chpasswd -c SHA512"
     arch_chroot "chfn ansible -f Ansible"
+
+    mkdir -p /mnt/home/ansible/.ssh
+    chmod 0700 /mnt/home/ansible/.ssh
+    key1="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAH5mZH2G4fD3f5ofopNdg1NfA4wE4ASwD4drU+w8RYR ansible@tts.lan";
+    key2="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC4IwiR3EIWs3+2/yOf8HAsC6FVG8UeSCDxrsZkjRy2RbMko1KbvH35Wwr8f8eli7Wgs9DW0qCErVhIdm+7fwtKfVbC7L4j+VyrBEVUGIb8qTAHtHE18ma89GLqFSNRbl1NTv9O/BvCi43qnNqVomc3alY4dFhxiUMP8mAYkmYTpeDMaCIenmdC/CnKDxcqVx4czcqqMVUXvMIAJ88NRCuZ8Cn90AInnt7wbr47As25YNFI+M510oqAVOz27a+uYKPq8S2dxaB1Cz66bHYHQ6AijMweLSfYW1G4hWUXXwWLWDjDSW4k1JEOXfjBFcwA3Mu/Ib8ew4k+FHgT5nxoIjwiZBF1o1yh1ZV+lDYTlMejHr25pcK3TnnPZLqrwn/RfKrlTTRenTFTzE1B8Oq2pnspH7jOD0WlN9BbCGuBCEzgWXGXyUu4fAzWPoYnMbwGcjnaOJ3Dziv244sDOvX5fbh8X5AjadncnOdnR4dA1y+C5Lc3WloqTospb7+nGd/t99CQ7CESGNtj8D2FxAPcCAgi3r+7Sx4K5QQXi80hLGQlQu/wcX0EesNrK37FU7CCW6N3e8+vJ+QYL+lWJZuyHCDQch75aDRHyqfbR/7gDGN8+ujER/F0XzcCMIgQNwMvrbpBrKMIthNBYgsnXUwN7peM/C4/tclKzDr6qIoBHUZP7Q== ansible@tts.lan"
+    echo -e "$key1\n$key2" > /mnt/home/ansible/.ssh/authorized_keys
 }
 
 wrap_up() {
