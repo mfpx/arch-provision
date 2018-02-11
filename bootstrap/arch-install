@@ -348,10 +348,10 @@ ask_for_passwords() {
     print_title "User Accounts"
     print_info "By default this script sets up the root account and an Ansible account."
 
-    was_set=$false
+    was_set="false"
 
     # Root first
-    while [[ $was_set = $false ]]; do
+    while [[ $was_set = "false" ]]; do
         pwd1=""
         pwd2=""
         read -p "Root password: " pwd1
@@ -359,15 +359,15 @@ ask_for_passwords() {
 
         if [[ $pwd1 = $pwd2 ]]; then
             ROOT_PWD=$pwd1
-            was_set=true
+            was_set="true"
         else
             echo "They didn't match... try again.\n"
         fi
     done
 
     # Now the Ansible user
-    was_set=$false
-    while [[ $was_set = $false ]]; do
+    was_set="false"
+    while [[ $was_set = "false" ]]; do
         pwd1=""
         pwd2=""
         read -p "Ansible password: " pwd1
@@ -375,7 +375,7 @@ ask_for_passwords() {
 
         if [[ $pwd1 = $pwd2 ]]; then
             ANSIBLE_PWD=$pwd1
-            was_set=true
+            was_set="true"
         else
             echo "They didn't match... try again.\n"
         fi
