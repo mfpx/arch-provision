@@ -53,8 +53,6 @@ SYS_ARCH=`uname -m` # Architecture (x86_64)
 UEFI=0
 XPINGS=0 # CONNECTION CHECK
 
-# Script variables
-KEYMAP="us"
 
 # User provided variables
 HOST_NAME="computer"
@@ -62,6 +60,8 @@ KERNEL_VERSION="default"
 DUAL_DISK=0
 MAIN_DISK="/dev/sda"
 SECOND_DISK=""
+ROOT_PWD=""
+ANSIBLE_PWD=""
 
 ### Common Helper Functions
 
@@ -339,6 +339,44 @@ ask_for_kernel_level() {
             break
         else
             invalid_option
+        fi
+    done
+}
+
+ask_for_passwords() {
+    print_title "User Accounts"
+    print_info "By default this script sets up the root account and an Ansible account."
+
+    was_set=$false
+
+    # Root first
+    while [[ $was_set = $false ]]; do
+        pwd1=""
+        pwd2=""
+        read -p "Root password: " pwd1
+        read -p "Once again: " pwd2
+
+        if [[ $pwd1 = $pwd2 ]]; then
+            ROOT_PWD=$pwd1
+            was_set=true
+        else
+            echo "They didn't match... try again.\n"
+        fi
+    done
+
+    # Now the Ansible user
+    was_set=$false
+    while [[ $was_set = $false ]]; do
+        pwd1=""
+        pwd2=""
+        read -p "Ansible password: " pwd1
+        read -p "Once again: " pwd2
+
+        if [[ $pwd1 = $pwd2 ]]; then
+            ANSIBLE_PWD=$pwd1
+            was_set=true
+        else
+            echo "They didn't match... try again.\n"
         fi
     done
 }
@@ -651,17 +689,25 @@ pull_repo() {
 }
 
 root_password() {
-    print_title "ROOT PASSWORD"
-    print_warning "Enter your new root password"
-    arch_chroot "passwd"
+#    print_title "ROOT PASSWORD"
+#    print_warning "Enter your new root password"
+#    arch_chroot "passwd"
+
+    echo "Setting up root account"
+    arch_chroot "echo -n root:$ROOT_PWD | chpasswd -S -c SHA512"
 }
 
 setup_ansible_account() {
-    print_title "ANSIBLE ACCOUNT"
-    print_warning "Enter the password for the ansible account"
+    #print_title "ANSIBLE ACCOUNT"
+    #print_warning "Enter the password for the ansible account"
 
+    #arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
+    #arch_chroot "passwd ansible"
+    #arch_chroot "chfn ansible -f Ansible"
+
+    echo "Setting up Ansible account"
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
-    arch_chroot "passwd ansible"
+    arch_chroot "echo -n ansible:$ANSIBLE_PWD | chpasswd -S -c SHA512"
     arch_chroot "chfn ansible -f Ansible"
 }
 
