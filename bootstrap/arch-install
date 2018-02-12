@@ -702,7 +702,7 @@ pull_repo() {
     print_info "Pulling repo"
     mkdir -p /mnt/srv/provision-arch
     arch_chroot "git clone https://github.com/brennanfee/provision-arch.git /srv/provision-arch"
-    chown -R ansible:ansible /mnt/srv/provision-arch
+    arch_chroot "chown -R ansible:ansible /srv/provision-arch"
 }
 
 root_password() {
@@ -722,7 +722,7 @@ setup_ansible_account() {
     key2="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC4IwiR3EIWs3+2/yOf8HAsC6FVG8UeSCDxrsZkjRy2RbMko1KbvH35Wwr8f8eli7Wgs9DW0qCErVhIdm+7fwtKfVbC7L4j+VyrBEVUGIb8qTAHtHE18ma89GLqFSNRbl1NTv9O/BvCi43qnNqVomc3alY4dFhxiUMP8mAYkmYTpeDMaCIenmdC/CnKDxcqVx4czcqqMVUXvMIAJ88NRCuZ8Cn90AInnt7wbr47As25YNFI+M510oqAVOz27a+uYKPq8S2dxaB1Cz66bHYHQ6AijMweLSfYW1G4hWUXXwWLWDjDSW4k1JEOXfjBFcwA3Mu/Ib8ew4k+FHgT5nxoIjwiZBF1o1yh1ZV+lDYTlMejHr25pcK3TnnPZLqrwn/RfKrlTTRenTFTzE1B8Oq2pnspH7jOD0WlN9BbCGuBCEzgWXGXyUu4fAzWPoYnMbwGcjnaOJ3Dziv244sDOvX5fbh8X5AjadncnOdnR4dA1y+C5Lc3WloqTospb7+nGd/t99CQ7CESGNtj8D2FxAPcCAgi3r+7Sx4K5QQXi80hLGQlQu/wcX0EesNrK37FU7CCW6N3e8+vJ+QYL+lWJZuyHCDQch75aDRHyqfbR/7gDGN8+ujER/F0XzcCMIgQNwMvrbpBrKMIthNBYgsnXUwN7peM/C4/tclKzDr6qIoBHUZP7Q== ansible@tts.lan"
     echo -e "$key1\n$key2" > /mnt/home/ansible/.ssh/authorized_keys
     chmod 0600 /mnt/home/ansible/.ssh
-    chown -R ansible:ansible /mnt/home/ansible/.ssh
+    arch_chroot "chown -R ansible:ansible /mnt/home/ansible/.ssh"
 }
 
 wrap_up() {
@@ -801,12 +801,12 @@ configure_pacman
 pause_if_debug
 install_yaourt
 pause_if_debug
-pull_repo
-pause_if_debug
 
 root_password
 pause_if_debug
 setup_ansible_account
+pause_if_debug
+pull_repo
 pause_if_debug
 wrap_up
 
