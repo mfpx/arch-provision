@@ -137,3 +137,8 @@ output-*/
 # Log directory
 logs/
 
+# ISO files for packer installations
+packer/iso/
+packer/boxes/
+output-virtualbox-iso/
+
