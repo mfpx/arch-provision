@@ -800,7 +800,7 @@ pause_if_debug
 configure_pacman
 pause_if_debug
 install_yaourt
-puase_if_debug
+pause_if_debug
 pull_repo
 pause_if_debug
 
