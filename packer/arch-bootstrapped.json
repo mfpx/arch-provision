@@ -40,7 +40,6 @@
                 ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
                 ["modifyvm", "{{.Name}}", "--mouse", "usb"],
                 ["modifyvm", "{{.Name}}", "--keyboard", "usb"],
-                ["modifyvm", "{{.Name}}", "--audio", "coreaudio"],
                 ["modifyvm", "{{.Name}}", "--audiocontroller", "hda"],
                 ["modifyvm", "{{.Name}}", "--usbehci", "on"]
             ],
