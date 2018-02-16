@@ -17,7 +17,6 @@ echo 'Defaults:vagrant !requiretty' > /etc/sudoers.d/vagrant
 echo 'vagrant ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/vagrant
 chmod 440 /etc/sudoers.d/vagrant
 
-# Add vagrant user to the ssh and wheel groups
+# Add vagrant user to the ssh
 usermod -a -G ssh vagrant
-usermod -a -G wheel vagrant
 

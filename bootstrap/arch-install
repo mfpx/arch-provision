@@ -26,12 +26,10 @@ BYellow=${Bold}${Yellow}
 
 # Paths
 WORKING_DIR=`pwd`
-SCRIPT=`realpath $0`
-SCRIPT_PATH=`dirname $SCRIPT`
 LOG="{$WORKING_DIR/`basename ${0}`.log"
 [[ -f $LOG ]] && rm -f $LOG
 
-# Flags
+# Flags and variables
 SYS_ARCH=`uname -m` # Architecture (x86_64)
 UEFI=0
 XPINGS=0 # CONNECTION CHECK
@@ -251,6 +249,11 @@ check_connection(){
 ### Prompts / User interaction
 
 ask_for_hostname() {
+    if [[ ! $ai_host_name = "" ]]; then
+        HOST_NAME="$ai_host_name"
+        return
+    fi
+
     print_title "Hostname"
     print_title_info "Pick a hostname for this machine."
     read -p "Hostname [ex: archlinux]: " HOST_NAME
@@ -260,6 +263,11 @@ ask_for_hostname() {
 }
 
 ask_for_main_disk() {
+    if [[ ! $ai_main_disk = "" ]]; then
+        MAIN_DISK="$ai_main_disk"
+        return
+    fi
+
     print_info "Determining main disk..."
     devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}'`);
 
@@ -284,6 +292,12 @@ ask_for_main_disk() {
 }
 
 ask_for_second_disk() {
+    if [[ ! $ai_second_disk = "" ]]; then
+        SECOND_DISK="$ai_second_disk"
+        DUAL_DISK=0
+        return
+    fi
+
     device_count=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -vc $MAIN_DISK || true`);
 
     if [[ $device_count = 0 ]]; then
@@ -323,6 +337,11 @@ ask_for_second_disk() {
 }
 
 ask_for_kernel_level() {
+    if [[ ! $ai_kernel_version = "" ]]; then
+        KERNEL_VERSION="$ai_kernel_version"
+        return
+    fi
+
     print_title "Kernel Selection"
     print_title_info "Select which linux kernel to install. The LTS version is generally prefered and more stable."
     version_list=("linux (default kernel)" "linux-lts (long term support, recommended)" "linux-hardened (security features)");
@@ -345,15 +364,18 @@ ask_for_kernel_level() {
     done
 }
 
-ask_for_passwords() {
-    print_title "User Accounts"
-    print_title_info "By default this script sets up the root account and an Ansible account."
+ask_for_root_password() {
+    if [[ ! $ai_root_password = "" ]]; then
+        ROOT_PWD="$ai_root_password"
+        return
+    fi
+
+    print_title "Root Password"
+    print_title_info "Set the password for the root account."
 
     was_set="false"
 
-    # Root first
     blank_line
-    print_status "Root first..."
     while [[ $was_set = "false" ]]; do
         pwd1=""
         pwd2=""
@@ -369,11 +391,20 @@ ask_for_passwords() {
             print_warning "They didn't match... try again."
         fi
     done
+}
 
-    # Now the Ansible user
+ask_for_ansible_password() {
+    if [[ ! $ai_ansible_password = "" ]]; then
+        ANSIBLE_PWD="$ai_ansible_password"
+        return
+    fi
+
+    print_title "Ansible Password"
+    print_title_info "This script sets up an account to run Ansible scripts.  Set the password of that account."
+
     was_set="false"
+
     blank_line
-    print_status "Now the Ansible account..."
     while [[ $was_set = "false" ]]; do
         pwd1=""
         pwd2=""
@@ -712,6 +743,7 @@ root_password() {
 
 setup_ansible_account() {
     print_info "Setting up Ansible account"
+
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
     arch_chroot "echo -n ansible:$ANSIBLE_PWD | chpasswd -c SHA512"
     arch_chroot "chfn ansible -f Ansible"
@@ -721,8 +753,35 @@ setup_ansible_account() {
     key1="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAH5mZH2G4fD3f5ofopNdg1NfA4wE4ASwD4drU+w8RYR ansible@tts.lan";
     key2="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC4IwiR3EIWs3+2/yOf8HAsC6FVG8UeSCDxrsZkjRy2RbMko1KbvH35Wwr8f8eli7Wgs9DW0qCErVhIdm+7fwtKfVbC7L4j+VyrBEVUGIb8qTAHtHE18ma89GLqFSNRbl1NTv9O/BvCi43qnNqVomc3alY4dFhxiUMP8mAYkmYTpeDMaCIenmdC/CnKDxcqVx4czcqqMVUXvMIAJ88NRCuZ8Cn90AInnt7wbr47As25YNFI+M510oqAVOz27a+uYKPq8S2dxaB1Cz66bHYHQ6AijMweLSfYW1G4hWUXXwWLWDjDSW4k1JEOXfjBFcwA3Mu/Ib8ew4k+FHgT5nxoIjwiZBF1o1yh1ZV+lDYTlMejHr25pcK3TnnPZLqrwn/RfKrlTTRenTFTzE1B8Oq2pnspH7jOD0WlN9BbCGuBCEzgWXGXyUu4fAzWPoYnMbwGcjnaOJ3Dziv244sDOvX5fbh8X5AjadncnOdnR4dA1y+C5Lc3WloqTospb7+nGd/t99CQ7CESGNtj8D2FxAPcCAgi3r+7Sx4K5QQXi80hLGQlQu/wcX0EesNrK37FU7CCW6N3e8+vJ+QYL+lWJZuyHCDQch75aDRHyqfbR/7gDGN8+ujER/F0XzcCMIgQNwMvrbpBrKMIthNBYgsnXUwN7peM/C4/tclKzDr6qIoBHUZP7Q== ansible@tts.lan"
     echo -e "$key1\n$key2" > /mnt/home/ansible/.ssh/authorized_keys
-    chmod 0600 /mnt/home/ansible/.ssh
+    chmod 0600 /mnt/home/ansible/.ssh/authorized_keys
     arch_chroot "chown -R ansible:ansible /home/ansible/.ssh"
+
+    # Add user to the ssh
+    arch_chroot "usermod -a -G ssh ansible"
+}
+
+setup_vagrant_account() {
+    if [[ $ai_is_vagrant = 1 ]]; then
+        print_info "Setting up Vagrant account"
+
+        arch_chroot "useradd -m -s /bin/bash vagrant"
+        arch_chroot "echo -n vagrant:vagrant | chpasswd -c SHA512"
+        arch_chroot "chfn vagrant -f Vagrant"
+
+        mkdir -p /mnt/home/vagrant/.ssh
+        chmod 0700 /mnt/home/vagrant/.ssh
+        curl -fsSL -o /mnt/home/vagrant/.ssh/authorized_keys 'https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub'
+        chmod 0600 /mnt/home/vagrant/.ssh/authorized_keys
+        arch_chroot "chown -R vagrant:vagrant /home/vagrant/.ssh"
+
+        # Add vagrant user to passwordless sudo
+        echo 'Defaults:vagrant !requiretty' > /mnt/etc/sudoers.d/vagrant
+        echo 'vagrant ALL=(ALL) NOPASSWD: ALL' >> /mnt/etc/sudoers.d/vagrant
+        chmod 440 /mnt/etc/sudoers.d/vagrant
+
+        # Add user to the ssh
+        arch_chroot "usermod -a -G ssh vagrant"
+    fi
 }
 
 wrap_up() {
@@ -753,7 +812,8 @@ ask_for_hostname
 ask_for_main_disk
 ask_for_second_disk
 ask_for_kernel_level
-ask_for_passwords
+ask_for_root_password
+ask_for_ansible_password
 
 print_summary
 
@@ -807,6 +867,8 @@ pause_if_debug
 setup_ansible_account
 pause_if_debug
 pull_repo
+pause_if_debug
+setup_vagrant_account
 pause_if_debug
 wrap_up
 
