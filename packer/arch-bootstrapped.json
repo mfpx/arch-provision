@@ -21,7 +21,7 @@
             "ssh_password": "vagrant",
 
             "ssh_wait_timeout": "45m",
-            "boot_wait": "10s",
+            "boot_wait": "15s",
 
             "shutdown_command": "sudo systemctl poweroff",
 
@@ -45,7 +45,7 @@
             ],
 
             "boot_command": [
-                "<enter><wait30>",
+                "<enter><wait10><wait10><wait10>",
                 "/usr/bin/curl -O http://{{ .HTTPIP }}:{{ .HTTPPort }}/arch-install<enter><wait10>",
                 "export ai_is_vagrant=1<enter>",
                 "/usr/bin/bash ./arch-install<enter>"
@@ -57,6 +57,7 @@
             "type": "shell",
             "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
             "scripts": [
+                "scripts/stamp.sh",
                 "scripts/vagrant.sh",
                 "scripts/install-virtualbox.sh",
                 "scripts/cleanup.sh",

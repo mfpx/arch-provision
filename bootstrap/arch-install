@@ -249,8 +249,8 @@ check_connection(){
 ### Prompts / User interaction
 
 ask_for_hostname() {
-    if [[ ! $ai_host_name = "" ]]; then
-        HOST_NAME="$ai_host_name"
+    if [[ ! -z "${ai_host_name:-}" ]]; then
+        HOST_NAME="${ai_host_name}"
         return
     fi
 
@@ -263,8 +263,8 @@ ask_for_hostname() {
 }
 
 ask_for_main_disk() {
-    if [[ ! $ai_main_disk = "" ]]; then
-        MAIN_DISK="$ai_main_disk"
+    if [[ ! -z "${ai_main_disk:-}" ]]; then
+        MAIN_DISK="${ai_main_disk}"
         return
     fi
 
@@ -292,8 +292,8 @@ ask_for_main_disk() {
 }
 
 ask_for_second_disk() {
-    if [[ ! $ai_second_disk = "" ]]; then
-        SECOND_DISK="$ai_second_disk"
+    if [[ ! -z "${ai_second_disk:-}" ]]; then
+        SECOND_DISK="${ai_second_disk}"
         DUAL_DISK=0
         return
     fi
@@ -337,8 +337,8 @@ ask_for_second_disk() {
 }
 
 ask_for_kernel_level() {
-    if [[ ! $ai_kernel_version = "" ]]; then
-        KERNEL_VERSION="$ai_kernel_version"
+    if [[ ! -z "${ai_kernel_version:-}" ]]; then
+        KERNEL_VERSION="${ai_kernel_version}"
         return
     fi
 
@@ -365,8 +365,8 @@ ask_for_kernel_level() {
 }
 
 ask_for_root_password() {
-    if [[ ! $ai_root_password = "" ]]; then
-        ROOT_PWD="$ai_root_password"
+    if [[ ! -z "${ai_root_password:-}" ]]; then
+        ROOT_PWD="${ai_root_password}"
         return
     fi
 
@@ -394,8 +394,8 @@ ask_for_root_password() {
 }
 
 ask_for_ansible_password() {
-    if [[ ! $ai_ansible_password = "" ]]; then
-        ANSIBLE_PWD="$ai_ansible_password"
+    if [[ ! -z "${ai_ansible_password:-}" ]]; then
+        ANSIBLE_PWD="${ai_ansible_password}"
         return
     fi
 
@@ -432,7 +432,7 @@ configure_mirrorlist(){
     tmpfile=$(mktemp --suffix=-mirrorlist)
 
     # Get latest mirror list and save to tmpfile
-    curl -so ${tmpfile} ${url}
+    curl -fsSL -o ${tmpfile} ${url}
     sed -i 's/^#Server/Server/g' ${tmpfile}
 
     # Backup and replace current mirrorlist file (if new file is non-zero)
@@ -603,6 +603,9 @@ install_base_system() {
     # Remaining tools
     pacstrap /mnt git vim openssh ansible
 
+    # Add the ssh group
+    arch_chroot "groupadd ssh"
+
     # Set the ssh service to be enabled
     arch_chroot "systemctl enable sshd.service"
 }
@@ -761,7 +764,7 @@ setup_ansible_account() {
 }
 
 setup_vagrant_account() {
-    if [[ $ai_is_vagrant = 1 ]]; then
+    if [[ "${ai_is_vagrant:-}" = 1 ]]; then
         print_info "Setting up Vagrant account"
 
         arch_chroot "useradd -m -s /bin/bash vagrant"

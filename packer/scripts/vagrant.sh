@@ -4,19 +4,23 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-date | sudo tee /etc/vagrant_box_build_time
-
 # Install vagrant ssh key
 mkdir -p /home/vagrant/.ssh
-wget --no-check-certificate -O /home/vagrant/.ssh/authorized_keys 'https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub'
-chown -R vagrant /home/vagrant/.ssh
-chmod -R go-rwsx /home/vagrant/.ssh
+chmod 0700 /home/vagrant/.ssh
+if [[ ! -f /home/vagrant/.ssh/authorized_keys ]]; then
+    curl -fsSL -o /home/vagrant/.ssh/authorized_keys 'https://raw.githubusercontent.com/hashicorp/vagrant/master/keys/vagrant.pub'
+    chmod 0600 /home/vagrant/.ssh/authorized_keys
+fi
 
 # Add vagrant user to passwordless sudo
-echo 'Defaults:vagrant !requiretty' > /etc/sudoers.d/vagrant
-echo 'vagrant ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/vagrant
-chmod 440 /etc/sudoers.d/vagrant
+if [[ ! -f /etc/sudoers.d/vagrant ]]; then
+    echo 'Defaults:vagrant !requiretty' > /etc/sudoers.d/vagrant
+    echo 'vagrant ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers.d/vagrant
+    chmod 440 /etc/sudoers.d/vagrant
+fi
 
 # Add vagrant user to the ssh
-usermod -a -G ssh vagrant
+if ! groups vagrant | grep &>/dev/null '\bssh\b'; then
+    usermod -a -G ssh vagrant
+fi
 
