@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Bash "strict" mode
-set -euo pipefail
+set -eu
 IFS=$'\n\t'
 
 # Clean the pacman cache

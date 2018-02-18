@@ -7,9 +7,6 @@
 set -eu
 IFS=$'\n\t'
 
-### Global Variables
-DEBUG=0
-
 # Text modifiers
 Bold=$(tput bold)
 Reset=$(tput sgr0)
@@ -96,12 +93,6 @@ error_msg() {
 pause_function() {
     print_line
     read -e -sn 1 -p "Press enter to continue..."
-}
-
-pause_if_debug() {
-    if [[ $DEBUG = 1 ]]; then
-        read -e -sn 1 -p "DEBUG - Press enter to continue..."
-    fi
 }
 
 invalid_option() {
@@ -447,12 +438,12 @@ configure_mirrorlist(){
       print_warning "    Unable to update, could not download list."
     fi
 
-    # better repo should go first
+    # Rank the mirrors
     cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.tmp
     rankmirrors /etc/pacman.d/mirrorlist.tmp > /etc/pacman.d/mirrorlist
     rm /etc/pacman.d/mirrorlist.tmp
 
-    # allow global read access (required for non-root yaourt execution)
+    # Allow global read access (required for non-root yaourt execution)
     chmod +r /etc/pacman.d/mirrorlist
 }
 
@@ -787,6 +778,20 @@ setup_vagrant_account() {
     fi
 }
 
+copy_mirrorlist() {
+    print_info "Copying mirrorlist"
+
+    # Backup the original
+    rm -f "/mnt/etc/pacman.d/mirrorlist.orig"
+    mv -i "/mnt/etc/pacman.d/mirrorlist" "/mnt/etc/pacman.d/mirrorlist.orig"
+
+    # Copy ours over
+    mv -i "/etc/pacman.d/mirrorlist" "/mnt/etc/pacman.d/mirrorlist"
+
+    # Allow global read access (required for non-root yaourt execution)
+    chmod +r /mnt/etc/pacman.d/mirrorlist
+}
+
 wrap_up() {
     print_title "INSTALL COMPLETED"
     print_success "After reboot you can configure users, install software."
@@ -823,55 +828,33 @@ print_summary
 pacman -Syy
 
 configure_mirrorlist
-pause_if_debug
 
 unmount_partitions
-pause_if_debug
 create_partitions
-pause_if_debug
 setup_lvm
-pause_if_debug
 format_partitions
-pause_if_debug
 mount_partitions
-pause_if_debug
 
 install_base_system
-pause_if_debug
 configure_keymap
-pause_if_debug
 configure_fstab
-pause_if_debug
 configure_hostname
-pause_if_debug
 configure_timezone
-pause_if_debug
 configure_clock
-pause_if_debug
 configure_locale
-pause_if_debug
 configure_mkinitcpio
-pause_if_debug
 
 install_bootloader
-pause_if_debug
 configure_bootloader
-pause_if_debug
 
 configure_sudo
-pause_if_debug
 configure_pacman
-pause_if_debug
 install_yaourt
-pause_if_debug
 
 root_password
-pause_if_debug
 setup_ansible_account
-pause_if_debug
 pull_repo
-pause_if_debug
 setup_vagrant_account
-pause_if_debug
+copy_mirrorlist
 wrap_up
 

@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# Bash "strict" mode
-set -euo pipefail
-IFS=$'\n\t'
-
 # Write zeros to improve virtual disk compaction
 zerofile=$(/usr/bin/mktemp /zerofile.XXXXX)
 /usr/bin/dd if=/dev/zero of="$zerofile" bs=1M
