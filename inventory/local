@@ -1,0 +1,15 @@
+# Inventory: Local
+
+##########
+#  Each machine should be named in at least one of the role groups below.
+#  At present the only desktop installed is KDE.  In the past (and perhaps
+#  again in the future) I supported other desktops but KDE is my DE of choice
+#  these days.
+##########
+
+### Machine role
+[desktop_workstations]
+localhost ansible_connection=local
+
+[dev_workstations]
+

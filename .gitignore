@@ -137,6 +137,9 @@ output-*/
 # Log directory
 logs/
 
+# Ignore the private keys
+keys/
+
 # ISO files for packer installations
 packer/iso/
 packer/boxes/

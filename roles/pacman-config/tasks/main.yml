@@ -1,0 +1,5 @@
+---
+- name: Refresh pacman mirrors
+  become: true
+  pacman: update_cache=yes
+

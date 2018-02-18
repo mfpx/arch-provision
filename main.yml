@@ -1,0 +1,16 @@
+---
+# First part just replicates what was done in the base install script
+- name: Core setup (bootstrap)
+  hosts: all
+  roles:
+    - pacman-config
+    # - upgrade
+    # - base-packages
+    # - sudo
+    # - core-users
+    # - ssh
+
+# - name: Common setup
+#   hosts: all
+#   roles:
+#     - users
