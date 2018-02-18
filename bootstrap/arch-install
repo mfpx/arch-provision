@@ -356,8 +356,7 @@ ask_for_kernel_level() {
 }
 
 ask_for_root_password() {
-    if [[ ! -z "${ai_root_password:-}" ]]; then
-        ROOT_PWD="${ai_root_password}"
+    if [[ ! -z "${ai_root_pwd_hash:-}" ]]; then
         return
     fi
 
@@ -385,8 +384,7 @@ ask_for_root_password() {
 }
 
 ask_for_ansible_password() {
-    if [[ ! -z "${ai_ansible_password:-}" ]]; then
-        ANSIBLE_PWD="${ai_ansible_password}"
+    if [[ ! -z "${ai_ansible_pwd_hash:-}" ]]; then
         return
     fi
 
@@ -732,14 +730,25 @@ pull_repo() {
 
 root_password() {
     print_info "Setting up root account"
-    arch_chroot "echo -n root:$ROOT_PWD | chpasswd -c SHA512"
+
+    if [[ ! -z "${ai_root_pwd_hash:-}" ]]; then
+        arch_chroot "echo -n 'root:${ai_root_pwd_hash}' | chpasswd -e"
+    else
+        arch_chroot "echo -n 'root:$ROOT_PWD' | chpasswd -c SHA512"
+    fi
 }
 
 setup_ansible_account() {
     print_info "Setting up Ansible account"
 
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
-    arch_chroot "echo -n ansible:$ANSIBLE_PWD | chpasswd -c SHA512"
+
+    if [[ ! -z "${ai_ansible_pwd_hash:-}" ]]; then
+        arch_chroot "echo -n 'ansible:${ai_ansible_pwd_hash}' | chpasswd -e"
+    else
+        arch_chroot "echo -n 'ansible:$ANSIBLE_PWD' | chpasswd -c SHA512"
+    fi
+
     arch_chroot "chfn ansible -f Ansible"
 
     mkdir -p /mnt/home/ansible/.ssh

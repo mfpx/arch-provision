@@ -34,6 +34,8 @@
                 "export ai_main_disk='/dev/sda'<enter>",
                 "export ai_second_disk=''<enter>",
                 "export ai_kernel_version='lts'<enter>",
+                "export ai_root_pwd_hash='$6$X7CNILR8u4OcP$B1PGIar28anDJKiuoBdrgCSkR98KE7uaVd3/wBBVQZuczsnP6ha6v1Nntc6imhwG2mATNvRT1X/aykb3ZETqa.'<enter>",
+                "export ai_ansible_pwd_hash='$6$fn95dtCnNmwsG$7IzYjdq7tuhW6kFda0/3vN9nAci/./zMgdGHjE6RWSBI1ceJY00PWFrLy2AMUEO0C6crxBjNHD/BBff5jacNQ1'<enter>",
                 "export ai_is_vagrant=1<enter>",
                 "/usr/bin/bash ./arch-install<enter>"
             ]
