@@ -2,11 +2,26 @@
 # First part just replicates what was done in the base install script
 - name: Core setup (bootstrap)
   hosts: all
+  become: true
   roles:
+    - hostname
     - pacman-config
-    # - upgrade
-    # - base-packages
-    # - sudo
+    - role: install-applications
+      package_set: "Base Packages"
+      pacman_packages:
+        - base-devel
+        - parted
+        - btrfs-progs
+        - f2fs-tools
+        - net-tools
+        - dosfstools
+        - gptfdisk
+        - git
+        - vim
+        - openssh
+        - ansible
+        - yaourt
+    - sudo
     # - core-users
     # - ssh
 
