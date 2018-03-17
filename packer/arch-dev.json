@@ -1,17 +1,15 @@
 {
     "variables": {
-        "iso_url": "https://mirrors.kernel.org/archlinux/iso/2018.02.01/archlinux-2018.02.01-x86_64.iso",
-        "iso_checksum_url": "https://mirrors.kernel.org/archlinux/iso/2018.02.01/sha1sums.txt",
-        "iso_checksum_type": "sha1"
+        "iso_version": "2018.03.01"
     },
     "builders": [
         {
             "name": "arch-bootstrapped",
             "type": "virtualbox-iso",
             "guest_os_type": "ArchLinux_64",
-            "iso_url": "{{ user `iso_url` }}",
-            "iso_checksum_url": "{{ user `iso_checksum_url` }}",
-            "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+            "iso_url": "https://mirrors.kernel.org/archlinux/iso/{{ user `iso_version` }}/archlinux-{{ user `iso_version` }}-x86_64.iso",
+            "iso_checksum_url": "https://mirrors.kernel.org/archlinux/iso/{{ user `iso_version` }}/sha1sums.txt",
+            "iso_checksum_type": "sha1",
 
             "headless": "true",
 
@@ -66,9 +64,13 @@
             "scripts": [
                 "scripts/stamp.sh",
                 "scripts/vagrant.sh",
-                "scripts/install-virtualbox.sh",
-                "scripts/cleanup.sh",
-                "scripts/minimize.sh"
+                "scripts/install-virtualbox.sh"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo systemctl reboot"
             ]
         },
         {
@@ -76,6 +78,21 @@
             "playbook_file": "../main.yml",
             "user": "vagrant",
             "groups": [ "dev_workstations" ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "sudo systemctl reboot"
+            ]
+        },
+        {
+            "type": "shell",
+            "pause_before": "30s",
+            "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
+            "scripts": [
+                "scripts/cleanup.sh",
+                "scripts/minimize.sh"
+            ]
         }
     ],
     "post-processors": [

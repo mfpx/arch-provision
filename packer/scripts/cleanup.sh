@@ -5,6 +5,5 @@ set -eu
 IFS=$'\n\t'
 
 # Clean the pacman cache
-/usr/bin/yes | /usr/bin/pacman -Scc
+/usr/bin/yes | /usr/bin/pacman -Sc
 /usr/bin/pacman-optimize
-

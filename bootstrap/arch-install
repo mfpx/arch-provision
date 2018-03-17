@@ -684,9 +684,8 @@ configure_bootloader() {
 
 configure_sudo() {
     print_info "Configuring sudo..."
-    arch_chroot "cp -v /etc/sudoers /etc/sudoers.orig"
-    ## Uncomment to allow members of group wheel to execute any command
-    arch_chroot "sed -i '/%wheel ALL=(ALL) ALL/s/^# //' /etc/sudoers"
+    echo '%wheel ALL=(ALL) ALL' >> /mnt/etc/sudoers.d/wheel
+    chmod 440 /mnt/etc/sudoers.d/wheel
 }
 
 configure_pacman() {
@@ -867,3 +866,6 @@ setup_vagrant_account
 copy_mirrorlist
 wrap_up
 
+if [[ "${ai_is_vagrant:-}" = 1 ]]; then
+    systemctl reboot
+fi
