@@ -12,18 +12,6 @@ indent_size = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.bat]
-end_of_line = crlf
-
-[*.cmd]
-end_of_line = crlf
-
-[*.ps1]
-end_of_line = crlf
-
-[*.sln]
-end_of_line = crlf
-
 [*.yml]
 indent_size = 2
 

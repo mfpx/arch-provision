@@ -1,7 +1,2 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
-* text=auto
-
-*.bat crlf
-*.cmd crlf
-*.ps1 crlf
-*.sln crlf
+* text=auto eol=lf
