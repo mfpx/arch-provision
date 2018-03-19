@@ -1,11 +1,12 @@
 ---
 - name: Setup sudo configuration
   template:
-    src: etc-sudoers.d-wheel.j2
+    src: etc-sudoers.d--wheel.j2
     dest: /etc/sudoers.d/wheel
     owner: root
     group: root
     mode: 0440
+    backup: no
 
 - name: Checking for vagrant...
   stat:
@@ -14,9 +15,19 @@
 
 - name: Setup vagrant sudo configuration
   template:
-    src: etc-sudoers.d-vagrant.j2
+    src: etc-sudoers.d--vagrant.j2
     dest: /etc/sudoers.d/vagrant
     owner: root
     group: root
     mode: 0440
+    backup: no
   when: is_vagrant.stat.exists
+
+- name: Allow svcacct user to run sudo without a password
+  template:
+    src: etc-sudoers.d--svcacct.j2
+    dest: /etc/sudoers.d/svcacct
+    owner: root
+    group: root
+    mode: 0440
+    backup: no

@@ -1,0 +1,37 @@
+---
+core_users:
+  - name: 'ansible'
+    comment: 'Ansible'
+
+
+default_groups:
+  - users
+
+users:
+  - name: 'brennan'
+    comment: 'Brennan Fee'
+    shell: '/bin/bash'
+    password: '$6$C2y1Sean$ufWb2GzOO/.nVBE2fVgMCmL.2BfnIiWCDJn6S7zThV5L0XcsJ4JLI17C2Qg6I.wPyB7Aj8npvnHP1xL3rX1co1'
+  - name: 'svcacct'
+    comment: 'Service Account'
+    shell: '/bin/bash'
+    password: '$6$W8M/6lhfHdlo$PvNnjsz9JIWO1mZQL65vewQOR.x5O4Xwbn6mFN94D3nWM6DztQE1WGe6FReHj5iBZCg90ytp6B6gjyz919M8u1'
+  - name: 'feeguest'
+    comment: 'Network guest'
+    shell: '/bin/bash'
+    password: '$6$gXuxL.gM3DAQnX$PMUMMrayd07Jl5948RVDy4gVQGW7IBBz0sqR4/PUypsI0ociD07Er.bUTYiGBMJgaQoCurVeMcmEsyak9QUsT1'
+
+sudo_users:
+  - brennan
+  - svcacct
+
+ssh_users:
+  - name: 'brennan'
+    public_rsa_key: 'keys/id_brennan_rsa.pub'
+    public_ed25519_key: 'keys/id_brennan_ed25519.pub'
+  - name: 'svcacct'
+    public_rsa_key: 'keys/id_svcacct_rsa.pub'
+    public_ed25519_key: 'keys/id_svcacct_ed25519.pub'
+
+virtualbox_managers:
+  - brennan

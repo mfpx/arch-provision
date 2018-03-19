@@ -22,8 +22,8 @@
         - ansible
         - yaourt
     - sudo
-    # - core-users
-    # - ssh
+    - ssh
+    - setup-users
 
 # - name: Common setup
 #   hosts: all
