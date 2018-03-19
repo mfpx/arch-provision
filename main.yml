@@ -5,7 +5,6 @@
   become: true
   roles:
     - hostname
-    - timezone
     - pacman-config
     - role: install-applications
       package_set: "Base Packages"
@@ -30,7 +29,8 @@
   hosts: all
   become: true
   roles:
-    # - time
+    - timezone
+    - time
     # - systemd
     # - network
     # - security

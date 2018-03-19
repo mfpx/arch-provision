@@ -85,6 +85,6 @@
 
 - name: Start and enable the ssh service
   service:
-    name: sshd
+    name: sshd.service
     state: started
     enabled: yes
