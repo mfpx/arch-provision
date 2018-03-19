@@ -5,6 +5,7 @@
   become: true
   roles:
     - hostname
+    - timezone
     - pacman-config
     - role: install-applications
       package_set: "Base Packages"
@@ -25,7 +26,56 @@
     - ssh
     - setup-users
 
-# - name: Common setup
+- name: Common setup
+  hosts: all
+  become: true
+  roles:
+    # - time
+    # - systemd
+    # - network
+    # - security
+    # - audio ??
+    # - printer-install
+    # - install-dev-frameworks
+
+# - name: X11 Desktop Setup
 #   hosts: all
 #   roles:
-#     - users
+#     - desktop-kde
+#     - desktop-addon-i3
+#     - { role: virtualbox-guest, when: ansible_virtualization_type == "virtualbox" and ansible_virtualization_role == "guest" }
+
+# - name: Install Fonts
+#   hosts: all
+#   vars_files:
+#     - vars/fonts.yml
+#   roles:
+#     - install-nerdfonts
+#     - install-fonts
+
+# - name: Desktop Workstation Applications
+#   hosts: all
+#   vars:
+#     package_set: "Shared Applications"
+#   vars_files:
+#     - vars/shared-applications.yml
+#   roles:
+#     - install-applications
+
+# - name: VM Applications
+#   hosts: desktop_workstations:laptop_workstations:gaming_workstations
+#   vars:
+#     package_set: "VM Applications"
+#   vars_files:
+#     - vars/vm-applications.yml
+#   roles:
+#     - { role: install-applications, when: ansible_virtualization_role != "guest" }
+
+# - name: Development Applications
+#   hosts: desktop_workstations:laptop_workstations:gaming_workstations
+#   vars:
+#     package_set: "VM Applications"
+#   vars_files:
+#     - vars/vm-applications.yml
+#   roles:
+#     - install-applications

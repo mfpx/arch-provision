@@ -1,8 +1,9 @@
 ---
+desired_time_zone: US/Central
+
 core_users:
   - name: 'ansible'
     comment: 'Ansible'
-
 
 default_groups:
   - users
