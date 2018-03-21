@@ -17,8 +17,8 @@
 
             "ssh_username": "vagrant",
             "ssh_password": "vagrant",
+            "ssh_timeout": "45m",
 
-            "ssh_wait_timeout": "45m",
             "boot_wait": "15s",
 
             "shutdown_command": "sudo systemctl poweroff",
