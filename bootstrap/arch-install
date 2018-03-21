@@ -416,6 +416,8 @@ ask_for_ansible_password() {
 configure_mirrorlist(){
     print_info "Configuring repository mirrorlist"
 
+    pacman -Syy
+
     url="https://www.archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on"
 
     tmpfile=$(mktemp --suffix=-mirrorlist)
@@ -443,6 +445,9 @@ configure_mirrorlist(){
 
     # Allow global read access (required for non-root yaourt execution)
     chmod +r /etc/pacman.d/mirrorlist
+
+    # Update one more time
+    pacman -Syy
 }
 
 unmount_partitions(){
@@ -558,44 +563,42 @@ mount_partitions() {
 install_base_system() {
     print_info "Installing base system"
 
-    pacman -Sy --noconfirm archlinux-keyring
+    pacman -S --noconfirm archlinux-keyring
 
     # Install kernel
+    pacstrap /mnt base base-devel linux-headers
+    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 1."
     case "$KERNEL_VERSION" in
         "lts")
-            pacman --noconfirm -Sg base | cut -d ' ' -f 2 | sed s/\^linux\$/linux-lts/g | pacstrap /mnt - linux-lts-headers
+            pacstrap /mnt linux-lts linux-lts-headers
+            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 2."
             ;;
         "hard")
-            pacman --noconfirm -Sg base | cut -d ' ' -f 2 | sed s/\^linux\$/linux-hardened/g | pacstrap /mnt - linux-hardened-headers
-            ;;
-        *)
-            pacstrap /mnt base linux-headers
+            pacstrap /mnt linux-hardened linux-hardened-headers
+            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 3."
             ;;
     esac
 
-    pacstrap /mnt base-devel parted btrfs-progs f2fs-tools net-tools dosfstools
-    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+    # Install file system tools
+    pacstrap /mnt parted btrfs-progs f2fs-tools net-tools dosfstools mtools nfs-utils
+    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 4."
 
     local PTABLE=`parted -l | grep "gpt"`
     [[ -n $PTABLE ]] && pacstrap /mnt gptfdisk
 
-    WIRELESS_DEV=`ip link | grep wl | awk '{print $2}' | sed 's/://' | sed '1!d'`
-    if [[ -n $WIRELESS_DEV ]]; then
-        pacstrap /mnt iw wireless_tools wpa_actiond wpa_supplicant dialog
-    fi
+    # Install networking tools
+    pacstrap /mnt dialog networkmanager networkmanager-openvpn iw wireless_tools wpa_actiond wpa_supplicant
+    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 5."
 
-    WIRED_DEV=`ip link | grep "ens\|eno\|enp" | awk '{print $2}' | sed 's/://' | sed '1!d'`
-    if [[ -n $WIRED_DEV ]]; then
-        arch_chroot "systemctl enable dhcpcd@${WIRED_DEV}.service"
-    fi
-
-    # Remaining tools
+    # Remaining misc tools
     pacstrap /mnt git vim openssh ansible
+    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 6."
 
     # Add the ssh group
     arch_chroot "groupadd ssh"
 
-    # Set the ssh service to be enabled
+    # Set the NetworkManager & ssh services to be enabled
+    arch_chroot "systemctl enable NetworkManager.service"
     arch_chroot "systemctl enable sshd.service"
 }
 
@@ -607,11 +610,7 @@ configure_keymap() {
 configure_fstab() {
     print_info "Write fstab"
 
-    if [[ $UEFI -eq 1 ]]; then
-        genfstab -t PARTUUID -p /mnt >> /mnt/etc/fstab
-    else
-        genfstab -U -p /mnt >> /mnt/etc/fstab
-    fi
+    genfstab -U -p /mnt >> /mnt/etc/fstab
     [[ -f /mnt/swapfile ]] && sed -i "s/\\/mnt//" /mnt/etc/fstab
 }
 
@@ -641,6 +640,7 @@ configure_clock() {
 configure_locale() {
     print_info "Configuring locale"
     echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
+    echo "LANGUAGE=en_US:en" >> /mnt/etc/locale.conf
     arch_chroot "sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
     arch_chroot "sed -i 's/#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
     arch_chroot "locale-gen"
@@ -652,33 +652,44 @@ configure_mkinitcpio() {
     # if LUKS hooks: base systemd keyboard autodetect modconf block sd-vconsole sd-encrypt sd-lvm2 filesystems fsck
     sed -i '/^HOOKS/c\HOOKS=(base systemd keyboard autodetect modconf block sd-lvm2 filesystems fsck)' /mnt/etc/mkinitcpio.conf
 
-    if [ "$(arch-chroot /mnt ls /boot | grep hardened -c)" -gt "0" ]; then
-        arch_chroot "mkinitcpio -p linux-hardened"
-    elif [ "$(arch-chroot /mnt ls /boot | grep lts -c)" -gt "0" ]; then
-        arch_chroot "mkinitcpio -p linux-lts"
-    else
-        arch_chroot "mkinitcpio -p linux"
-    fi
+    arch_chroot "mkinitcpio -p linux"
+    case "$KERNEL_VERSION" in
+        "lts")
+            arch_chroot "mkinitcpio -p linux-lts"
+            ;;
+        "hard")
+            arch_chroot "mkinitcpio -p linux-hardened"
+            ;;
+    esac
 }
 
 install_bootloader() {
     print_info "Install bootloader"
 
-    pacstrap /mnt grub os-prober
-    if [[ $UEFI -eq 1 ]]; then
+    if [[ $UEFI = 1 ]]; then
+        pacstrap /mnt grub os-prober
+        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 7."
+    else
+        pacstrap /mnt grub-bios os-prober
+        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 8."
+    fi
+
+    if [[ $UEFI = 1 ]]; then
         pacstrap /mnt efibootmgr
+        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 9."
     fi
 }
 
 configure_bootloader() {
     print_info "Configure bootloader"
 
-    if [[ $UEFI -eq 1 ]]; then
-        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub"
+    if [[ $UEFI = 1 ]]; then
+        arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub --recheck"
     else
         arch_chroot "grub-install --target=i386-pc --recheck --debug /dev/sda"
     fi
 
+    cp /mnt/usr/share/locale/en\@quot/LC_MESSAGES/grub.mo /mnt/boot/grub/locale/en.mo
     arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
 
@@ -833,8 +844,6 @@ ask_for_ansible_password
 
 print_summary
 
-pacman -Syy
-
 configure_mirrorlist
 
 unmount_partitions
@@ -864,6 +873,7 @@ setup_ansible_account
 pull_repo
 setup_vagrant_account
 copy_mirrorlist
+unmount_partitions
 wrap_up
 
 if [[ "${ai_is_vagrant:-}" = 1 ]]; then
