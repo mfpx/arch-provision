@@ -23,4 +23,3 @@ fi
 if ! groups vagrant | grep &>/dev/null '\bssh\b'; then
     usermod -a -G ssh vagrant
 fi
-
