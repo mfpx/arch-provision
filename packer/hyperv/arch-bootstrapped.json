@@ -1,36 +1,38 @@
 {
     "variables": {
-        "iso_url": "https://mirrors.kernel.org/archlinux/iso/2018.02.01/archlinux-2018.02.01-x86_64.iso",
-        "iso_checksum_url": "https://mirrors.kernel.org/archlinux/iso/2018.02.01/sha1sums.txt",
-        "iso_checksum_type": "sha1"
+        "iso_version": "2018.03.01"
     },
     "builders": [
         {
             "name": "arch-bootstrapped",
             "type": "hyperv-iso",
-            "iso_url": "{{ user `iso_url` }}",
-            "iso_checksum_url": "{{ user `iso_checksum_url` }}",
-            "iso_checksum_type": "{{ user `iso_checksum_type` }}",
+            "iso_url": "https://mirrors.kernel.org/archlinux/iso/{{ user `iso_version` }}/archlinux-{{ user `iso_version` }}-x86_64.iso",
+            "iso_checksum_url": "https://mirrors.kernel.org/archlinux/iso/{{ user `iso_version` }}/sha1sums.txt",
+            "iso_checksum_type": "sha1",
 
             "http_directory": "../../bootstrap",
 
+            "communicator": "ssh",
             "ssh_username": "vagrant",
             "ssh_password": "vagrant",
+            "ssh_timeout": "45m",
 
             "boot_wait": "15s",
 
             "shutdown_command": "sudo systemctl poweroff",
-            "post_shutdown_delay": "2m",
+
+            "guest_additions_mode": "disable",
 
             "cpu": "2",
             "disk_size": "122880",
             "generation": "2",
             "ram_size": "4096",
+            "enable_secure_boot": "false",
             "enable_dynamic_memory": "true",
-            "switch_name": "Default Switch",
+            "switch_name": "External Switch",
 
             "boot_command": [
-                "<enter><wait30>",
+                "<enter><wait10><wait10><wait10>",
                 "/usr/bin/curl -O http://{{ .HTTPIP }}:{{ .HTTPPort }}/arch-install<enter><wait10>",
                 "export ai_host_name=\"packer-$((1 + RANDOM % 1000))\"<enter>",
                 "export ai_main_disk='/dev/sda'<enter>",
@@ -39,7 +41,8 @@
                 "export ai_root_pwd_hash='$6$X7CNILR8u4OcP$B1PGIar28anDJKiuoBdrgCSkR98KE7uaVd3/wBBVQZuczsnP6ha6v1Nntc6imhwG2mATNvRT1X/aykb3ZETqa.'<enter>",
                 "export ai_ansible_pwd_hash='$6$fn95dtCnNmwsG$7IzYjdq7tuhW6kFda0/3vN9nAci/./zMgdGHjE6RWSBI1ceJY00PWFrLy2AMUEO0C6crxBjNHD/BBff5jacNQ1'<enter>",
                 "export ai_is_vagrant=1<enter>",
-                "/usr/bin/bash ./arch-install<enter>"
+                "/usr/bin/bash ./arch-install<enter>",
+                "<wait5><enter><wait><enter>"
             ]
         }
     ],
@@ -49,7 +52,21 @@
             "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
             "scripts": [
                 "../scripts/stamp.sh",
-                "../scripts/vagrant.sh",
+                "../scripts/vagrant.sh"
+            ]
+        },
+        {
+            "type": "shell",
+            "expect_disconnect": true,
+            "inline": [
+                "sudo systemctl reboot"
+            ]
+        },
+        {
+            "type": "shell",
+            "pause_before": "10s",
+            "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
+            "scripts": [
                 "../scripts/cleanup.sh",
                 "../scripts/minimize.sh"
             ]

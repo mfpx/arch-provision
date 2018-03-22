@@ -676,7 +676,6 @@ install_bootloader() {
 
     if [[ $UEFI = 1 ]]; then
         pacstrap /mnt efibootmgr
-        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 9."
     fi
 }
 
@@ -868,11 +867,11 @@ configure_sudo
 configure_pacman
 install_yaourt
 
+copy_mirrorlist
 root_password
 setup_ansible_account
 pull_repo
 setup_vagrant_account
-copy_mirrorlist
 unmount_partitions
 wrap_up
 
