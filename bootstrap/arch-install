@@ -28,6 +28,7 @@ LOG="{$WORKING_DIR/`basename ${0}`.log"
 
 # Flags and variables
 SYS_ARCH=`uname -m` # Architecture (x86_64)
+DISTRO=`uname -n`
 UEFI=0
 XPINGS=0 # CONNECTION CHECK
 KEYMAP="us"
@@ -418,13 +419,21 @@ configure_mirrorlist(){
 
     pacman -Syy
 
-    url="https://www.archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on"
-
     tmpfile=$(mktemp --suffix=-mirrorlist)
 
-    # Get latest mirror list and save to tmpfile
-    curl -fsSL -o ${tmpfile} ${url}
-    sed -i 's/^#Server/Server/g' ${tmpfile}
+    if [[ $DISTRO = 'parabolaiso' ]]; then
+        echo 'Server = https://mirror.fsf.org/$repo/os/$arch' > ${tmpfile}
+        echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >> ${tmpfile}
+        echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >> ${tmpfile}
+        echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >> ${tmpfile}
+        echo 'Server = https://parabola.serverpit.com/$repo/os/$arch' >> ${tmpfile}
+    else
+        url="https://www.archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on"
+
+        # Get latest mirror list and save to tmpfile
+        curl -fsSL -o ${tmpfile} ${url}
+        sed -i 's/^#Server/Server/g' ${tmpfile}
+    fi
 
     # Backup and replace current mirrorlist file (if new file is non-zero)
     if [[ -s ${tmpfile} ]]; then
@@ -563,7 +572,11 @@ mount_partitions() {
 install_base_system() {
     print_info "Installing base system"
 
-    pacman -S --noconfirm archlinux-keyring
+    if [[ $DISTRO = 'parabolaiso' ]]; then
+        pacman -S --noconfirm parabola-keyring
+    else
+        pacman -S --noconfirm archlinux-keyring
+    fi
 
     # Install kernel
     pacstrap /mnt base base-devel linux-headers
@@ -578,6 +591,23 @@ install_base_system() {
             [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 3."
             ;;
     esac
+
+    if [[ $DISTRO = 'parabolaiso' ]]; then
+        setup_repo() {
+            local _has_repo=`grep -n "\[$1\]" /etc/pacman.conf | cut -f1 -d:`
+            if [[ -z $_has_repo ]]; then
+                echo -e "\n[$1]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
+            else
+                sed -i "${_has_repo}s/^#//" /etc/pacman.conf
+                local _has_repo=$(( ${_has_repo} + 1 ))
+                sed -i "${_has_repo}s/^#//" /etc/pacman.conf
+            fi
+        }
+
+        setup_repo "nonprism"
+        pacman -Sy
+        pacstrap /mnt your-privacy
+    fi
 
     # Install file system tools
     pacstrap /mnt parted btrfs-progs f2fs-tools net-tools dosfstools mtools nfs-utils
@@ -649,18 +679,33 @@ configure_locale() {
 configure_mkinitcpio() {
     print_info "Configuring mkinitcpio"
 
-    # if LUKS hooks: base systemd keyboard autodetect modconf block sd-vconsole sd-encrypt sd-lvm2 filesystems fsck
-    sed -i '/^HOOKS/c\HOOKS=(base systemd keyboard autodetect modconf block sd-lvm2 filesystems fsck)' /mnt/etc/mkinitcpio.conf
+    sed -i '/^HOOKS/c\HOOKS=(systemd keyboard autodetect modconf block sd-vconsole sd-encrypt sd-lvm2 filesystems fsck)' /mnt/etc/mkinitcpio.conf
 
-    arch_chroot "mkinitcpio -p linux"
-    case "$KERNEL_VERSION" in
-        "lts")
-            arch_chroot "mkinitcpio -p linux-lts"
-            ;;
-        "hard")
-            arch_chroot "mkinitcpio -p linux-hardened"
-            ;;
-    esac
+    # Setup compression
+    sed -i 's/#COMPRESSION="lz4"/COMPRESSION="lz4"/' /mnt/etc/mkinitcpio.conf
+    sed -i '/^#COMPRESSION_OPTIONS/c\COMPRESSION_OPTIONS=(-3)' /mnt/etc/mkinitcpio.conf
+
+    if [[ $DISTRO = 'parabolaiso' ]]; then
+        arch_chroot "mkinitcpio -p linux-libre"
+        case "$KERNEL_VERSION" in
+            "lts")
+                arch_chroot "mkinitcpio -p linux-libre-lts"
+                ;;
+            "hard")
+                arch_chroot "mkinitcpio -p linux-libre-hardened"
+                ;;
+        esac
+    else
+        arch_chroot "mkinitcpio -p linux"
+        case "$KERNEL_VERSION" in
+            "lts")
+                arch_chroot "mkinitcpio -p linux-lts"
+                ;;
+            "hard")
+                arch_chroot "mkinitcpio -p linux-hardened"
+                ;;
+        esac
+    fi
 }
 
 install_bootloader() {
@@ -702,16 +747,28 @@ configure_pacman() {
     print_info "Configuring pacman..."
     cp -v /mnt/etc/pacman.conf /mnt/etc/pacman.conf.orig
 
+    setup_repo() {
+        local _has_repo=`grep -n "\[$1\]" /mnt/etc/pacman.conf | cut -f1 -d:`
+        if [[ -z $_has_repo ]]; then
+            echo -e "\n[$1]\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
+        else
+            sed -i "${_has_repo}s/^#//" /mnt/etc/pacman.conf
+            local _has_repo=$(( ${_has_repo} + 1 ))
+            sed -i "${_has_repo}s/^#//" /mnt/etc/pacman.conf
+        fi
+    }
+
     # Set up multilib
     if [[ $SYS_ARCH == x86_64 ]]; then
-        local _has_multilib=`grep -n "\[multilib\]" /mnt/etc/pacman.conf | cut -f1 -d:`
-        if [[ -z $_has_multilib ]]; then
-            echo -e "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
-            echo -e '\nMultilib repository added into pacman.conf file'
-        else
-            sed -i "${_has_multilib}s/^#//" /mnt/etc/pacman.conf
-            local _has_multilib=$(( ${_has_multilib} + 1 ))
-            sed -i "${_has_multilib}s/^#//" /mnt/etc/pacman.conf
+        setup_repo "multilib"
+        echo -e '\nMultilib repository added into pacman.conf file'
+
+        if [[ $DISTRO = 'parabolaiso' ]]; then
+            setup_repo "nonprism"
+#            setup_repo "nonprism-multilib"
+            setup_repo "libre-multilib"
+            setup_repo "pcr-multilib"
+            echo -e '\nParabola repositories added into pacman.conf file'
         fi
     fi
 }
