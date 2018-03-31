@@ -15,7 +15,17 @@
         - f2fs-tools
         - net-tools
         - dosfstools
+        - mtools
+        - nfs-utils
         - gptfdisk
+        - dialog
+        - networkmanager
+        - networkmanager-openvpn
+        - iw
+        - wireless_tools
+        - wpa_actiond
+        - wpa_supplicant
+        - reflector
         - git
         - vim
         - openssh
@@ -24,12 +34,13 @@
     - sudo
     - ssh
     - setup-users
-
-- name: Common setup
-  hosts: all
-  become: true
-  roles:
     - time
+    - locale
+
+#- name: Common setup
+#  hosts: all
+#  become: true
+#  roles:
     # - systemd
     # - network
     # - security

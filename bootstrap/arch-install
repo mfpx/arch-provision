@@ -621,7 +621,7 @@ install_base_system() {
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 5."
 
     # Remaining misc tools
-    pacstrap /mnt git vim openssh ansible
+    pacstrap /mnt reflector git vim openssh ansible
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 6."
 
     # Add the ssh group
@@ -669,8 +669,9 @@ configure_clock() {
 
 configure_locale() {
     print_info "Configuring locale"
-    echo "LANG=en_US.UTF-8" > /mnt/etc/locale.conf
-    echo "LANGUAGE=en_US:en" >> /mnt/etc/locale.conf
+    echo "LANG=\"en_US.UTF-8\"" > /mnt/etc/locale.conf
+    echo "LANGUAGE=\"en_US:en\"" >> /mnt/etc/locale.conf
+    echo "LC_ALL=\"en_US.UTF-8\"" >> /mnt/etc/locale.conf
     arch_chroot "sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
     arch_chroot "sed -i 's/#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
     arch_chroot "locale-gen"

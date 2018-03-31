@@ -12,5 +12,4 @@ Target = pacman-mirrorlist
 Description = Updating mirror list...
 When = PostTransaction
 Depends = reflector
-Exec = /usr/bin/bash -c "/usr/bin/reflector --latest 15 --sort rate --save /etc/pacman.d/mirrorlist && if [[ -f /etc/pacman.d/mirrorlist.pacnew ]] ; then rm /etc/pacman.d/mirrorlist.pacnew ; fi"
-
+Exec = /usr/bin/bash -c "/usr/bin/reflector --score 100 --number 20 --age 12 --sort rate --protocol https --country 'United States' --country 'Canada' --save /etc/pacman.d/mirrorlist && if [[ -f /etc/pacman.d/mirrorlist.pacnew ]] ; then rm /etc/pacman.d/mirrorlist.pacnew ; fi"

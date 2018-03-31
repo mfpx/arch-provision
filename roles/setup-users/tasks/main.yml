@@ -27,7 +27,7 @@
 - name: Add super users to the wheel group
   user:
     name: '{{ item }}'
-    groups: 'sudo'
+    groups: 'wheel'
     append: yes
   with_items: '{{ sudo_users }}'
 

@@ -28,11 +28,11 @@ sudo_users:
 
 ssh_users:
   - name: 'brennan'
-    public_rsa_key: 'keys/id_brennan_rsa.pub'
-    public_ed25519_key: 'keys/id_brennan_ed25519.pub'
+    public_rsa_key: 'keys/id_rsa_brennan.pub'
+    public_ed25519_key: 'keys/id_ed25519_brennan.pub'
   - name: 'svcacct'
-    public_rsa_key: 'keys/id_svcacct_rsa.pub'
-    public_ed25519_key: 'keys/id_svcacct_ed25519.pub'
+    public_rsa_key: 'keys/id_rsa_svcacct.pub'
+    public_ed25519_key: 'keys/id_ed25519_svcacct.pub'
 
 virtualbox_managers:
   - brennan
