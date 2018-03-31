@@ -1,0 +1,28 @@
+---
+package_set: "Base Packages"
+pacman_packages:
+  - base
+  - base-devel
+  - linux-headers
+  - parted
+  - btrfs-progs
+  - f2fs-tools
+  - net-tools
+  - dosfstools
+  - mtools
+  - nfs-utils
+  - gptfdisk
+  - dialog
+  - networkmanager
+  - networkmanager-openvpn
+  - iw
+  - wireless_tools
+  - wpa_actiond
+  - wpa_supplicant
+  - reflector
+  - git
+  - vim
+  - openssh
+  - ansible
+  - yaourt
+

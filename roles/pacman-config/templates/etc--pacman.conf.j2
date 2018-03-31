@@ -21,6 +21,7 @@ CheckSpace
 # trusts (see pacman-key and its man page), as well as unsigned packages.
 SigLevel    = Required DatabaseOptional
 LocalFileSigLevel = Optional
+#RemoteFileSigLevel = Required
 
 #
 # REPOSITORIES
@@ -40,4 +41,3 @@ Include = /etc/pacman.d/mirrorlist
 [archlinuxfr]
 SigLevel = Never
 Server = https://repo.archlinux.fr/$arch
-

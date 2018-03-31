@@ -419,6 +419,29 @@ configure_mirrorlist(){
 
     pacman -Syy
 
+    # Install reflector
+    pacman -S --noconfirm reflector
+
+    print_status "    Backing up the original mirrorlist..."
+    rm -f "/etc/pacman.d/mirrorlist.orig"
+    mv -i "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.orig"
+
+    print_status "    Rotating the new list into place..."
+    # Run reflector
+    /usr/bin/reflector --score 100 --number 20 --age 12 --sort rate --protocol https --country 'United States' --country 'Canada' --save /etc/pacman.d/mirrorlist
+
+    # Allow global read access (required for non-root yaourt execution)
+    chmod +r /etc/pacman.d/mirrorlist
+
+    # Update one more time
+    pacman -Syy
+}
+
+configure_mirrorlist_old(){
+    print_info "Configuring repository mirrorlist"
+
+    pacman -Syy
+
     tmpfile=$(mktemp --suffix=-mirrorlist)
 
     if [[ $DISTRO = 'parabolaiso' ]]; then
@@ -878,6 +901,8 @@ wrap_up() {
 
 ### Main flow
 
+loadkeys "$KEYMAP" # load the keymap
+
 print_title "https://github.com/brennanfee/provision-arch"
 print_title_info "Provision Arch -> Automated script to install a base Arch system."
 print_line
@@ -888,8 +913,6 @@ check_root
 check_archlinux
 check_boot_system
 check_connection
-
-loadkeys "$KEYMAP" # load the keymap
 
 ## Ask questions
 ask_for_hostname
