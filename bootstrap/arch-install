@@ -93,7 +93,9 @@ error_msg() {
 
 pause_function() {
     print_line
-    read -e -sn 1 -p "Press enter to continue..."
+    if [[ ! "${ai_automatic_install:-}" = 1 ]]; then
+        read -e -sn 1 -p "Press enter to continue..."
+    fi
 }
 
 invalid_option() {
@@ -497,8 +499,12 @@ wipe_disks() {
     print_info "    Wiping DMs"
     for _part in `awk '/dm-/{print $4}' /proc/partitions`
     do
-        pvremove -y -ff "/dev/$_part" 2> /dev/null
-        dd if=/dev/zero of="/dev/$_part" bs=512 count=255
+        if [[ $DISTRO = 'parabolaiso' && "$_part" = 'dm-0' ]]; then
+            print_info "    Skipping dm-0 in Parabola"
+        else
+            pvremove -y -ff "/dev/$_part" 2> /dev/null || true
+            dd if=/dev/zero of="/dev/$_part" bs=512 count=255
+        fi
     done
 
     print_info "    Wiping main disk partitions"
