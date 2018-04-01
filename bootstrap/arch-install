@@ -248,17 +248,36 @@ ask_for_hostname() {
         return
     fi
 
+    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+        if [[ $DISTRO = 'parabolaiso' ]]; then
+            HOST_NAME="parabola-$((1 + RANDOM % 1000))"
+        else
+            HOST_NAME="arch-$((1 + RANDOM % 1000))"
+        fi
+
+        return
+    fi
+
     print_title "Hostname"
-    print_title_info "Pick a hostname for this machine."
+    print_title_info "Pick a hostname for this machine.  Press enter to have a random hostname selected."
     read -p "Hostname [ex: archlinux]: " HOST_NAME
     if [[ $HOST_NAME = "" ]]; then
-        HOST_NAME="archlinux"
+        if [[ $DISTRO = 'parabolaiso' ]]; then
+            HOST_NAME="parabola-$((1 + RANDOM % 1000))"
+        else
+            HOST_NAME="arch-$((1 + RANDOM % 1000))"
+        fi
     fi
 }
 
 ask_for_main_disk() {
     if [[ ! -z "${ai_main_disk:-}" ]]; then
         MAIN_DISK="${ai_main_disk}"
+        return
+    fi
+
+    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+        MAIN_DISK="/dev/sda"
         return
     fi
 
@@ -288,6 +307,12 @@ ask_for_main_disk() {
 ask_for_second_disk() {
     if [[ ! -z "${ai_second_disk:-}" ]]; then
         SECOND_DISK="${ai_second_disk}"
+        DUAL_DISK=0
+        return
+    fi
+
+    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+        SECOND_DISK=""
         DUAL_DISK=0
         return
     fi
@@ -337,6 +362,11 @@ ask_for_kernel_level() {
         return
     fi
 
+    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+        KERNEL_VERSION="lts"
+        return
+    fi
+
     print_title "Kernel Selection"
     print_title_info "Select which linux kernel to install. The LTS version is generally prefered and more stable."
     version_list=("linux (default kernel)" "linux-lts (long term support, recommended)" "linux-hardened (security features)");
@@ -364,15 +394,25 @@ ask_for_root_password() {
         return
     fi
 
+    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+        if [[ "${ai_is_vagrant:-}" = 1 ]]; then
+            ROOT_PWD="vagrant"
+        else
+            ROOT_PWD="password"
+        fi
+
+        return
+    fi
+
     print_title "Root Password"
     print_title_info "Set the password for the root account."
 
-    was_set="false"
+    local was_set="false"
 
     blank_line
     while [[ $was_set = "false" ]]; do
-        pwd1=""
-        pwd2=""
+        local pwd1=""
+        local pwd2=""
         read -sp "Root password: " pwd1
         echo -e ""
         read -sp "Once again: " pwd2
@@ -392,15 +432,20 @@ ask_for_ansible_password() {
         return
     fi
 
+    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+        ANSIBLE_PWD="ansible"
+        return
+    fi
+
     print_title "Ansible Password"
     print_title_info "This script sets up an account to run Ansible scripts.  Set the password of that account."
 
-    was_set="false"
+    local was_set="false"
 
     blank_line
     while [[ $was_set = "false" ]]; do
-        pwd1=""
-        pwd2=""
+        local pwd1=""
+        local pwd2=""
         read -sp "Ansible password: " pwd1
         echo -e ""
         read -sp "Once again: " pwd2
@@ -496,31 +541,16 @@ unmount_partitions(){
 wipe_disks() {
     print_info "Wiping disks"
 
-    print_info "    Wiping DMs"
-    for _part in `awk '/dm-/{print $4}' /proc/partitions`
-    do
-        if [[ $DISTRO = 'parabolaiso' && "$_part" = 'dm-0' ]]; then
-            print_info "    Skipping dm-0 in Parabola"
-        else
-            pvremove -y -ff "/dev/$_part" 2> /dev/null || true
-            dd if=/dev/zero of="/dev/$_part" bs=512 count=255
-        fi
-    done
-
     print_info "    Wiping main disk partitions"
-    _disk=`echo $MAIN_DISK | sed -e 's/^\/dev\///'`
-    for _part in `awk '/$_disk/{print $4}' /proc/partitions`
-    do
-        dd if=/dev/zero of="/dev/$_part" bs=512 count=255
-    done
+    wipefs --all --force "${MAIN_DISK}*" 2> /dev/null || true
+    wipefs --all --force "${MAIN_DISK}" || true
+    dd if=/dev/zero of="$MAIN_DISK" bs=512 count=10 conv=notrunc
 
     if [[ $DUAL_DISK = 1 ]]; then
         print_info "    Wiping second disk partitions"
-        _disk=`echo $SECOND_DISK | sed -e 's/^\/dev\///'`
-        for _part in `awk '/$_disk/{print $4}' /proc/partitions`
-        do
-            dd if=/dev/zero of="/dev/$_part" bs=512 count=255
-        done
+        wipefs --all --force "${SECOND_DISK}*" 2> /dev/null || true
+        wipefs --all --force "${SECOND_DISK}" || true
+        dd if=/dev/zero of="$SECOND_DISK" bs=512 count=10 conv=notrunc
     fi
 
     partprobe 2> /dev/null || true
@@ -891,6 +921,10 @@ setup_ansible_account() {
 
     # Add user to the ssh
     arch_chroot "usermod -a -G ssh ansible"
+
+    # Stamp the build
+    mkdir -p /mnt/srv/provision-stamps
+    date --iso-8601=seconds | sudo tee /mnt/srv/provision-stamps/box_build_time
 }
 
 setup_vagrant_account() {
@@ -914,6 +948,9 @@ setup_vagrant_account() {
 
         # Add user to the ssh
         arch_chroot "usermod -a -G ssh vagrant"
+
+        # Stamp the vagrant build
+        date --iso-8601=seconds | sudo tee /mnt/etc/vagrant_box_build_time
     fi
 }
 
