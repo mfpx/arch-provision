@@ -311,6 +311,7 @@ ask_for_second_disk() {
         return
     fi
 
+    blank_line
     lsblk --nodeps --list --exclude 1,11,7 --output "name,size,type"
     devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -v $MAIN_DISK`);
     blank_line
@@ -490,30 +491,63 @@ unmount_partitions(){
     done
 }
 
+wipe_disks() {
+    print_info "Wiping disks"
+
+    print_info "    Wiping DMs"
+    for _part in `awk '/dm-/{print $4}' /proc/partitions`
+    do
+        pvremove -y -ff "/dev/$_part" 2> /dev/null
+        dd if=/dev/zero of="/dev/$_part" bs=512 count=255
+    done
+
+    print_info "    Wiping main disk partitions"
+    _disk=`echo $MAIN_DISK | sed -e 's/^\/dev\///'`
+    for _part in `awk '/$_disk/{print $4}' /proc/partitions`
+    do
+        dd if=/dev/zero of="/dev/$_part" bs=512 count=255
+    done
+
+    if [[ $DUAL_DISK = 1 ]]; then
+        print_info "    Wiping second disk partitions"
+        _disk=`echo $SECOND_DISK | sed -e 's/^\/dev\///'`
+        for _part in `awk '/$_disk/{print $4}' /proc/partitions`
+        do
+            dd if=/dev/zero of="/dev/$_part" bs=512 count=255
+        done
+    fi
+
+    partprobe 2> /dev/null
+}
+
 create_partitions(){
     print_info "Creating partitions"
 
     print_status "    Main disk"
     # Clear out the partitions
-    sgdisk --zap $MAIN_DISK
+    sgdisk -g --zap $MAIN_DISK
+
     if [[ $UEFI = 1 ]]; then
         # EFI partition (500mb)
-        sgdisk -n 1:2048:1026047 -c 1:"EFI" -t 1:ef00 $MAIN_DISK
+        sgdisk -g -n 1:2048:1026047 -c 1:"EFI" -t 1:ef00 $MAIN_DISK
         # The rest of the disk is for LVM
-        sgdisk -n 2:1026048:0 -c 2:"LVM" -t 2:8e00 $MAIN_DISK
+        sgdisk -g -n 2:1026048:0 -c 2:"LVM" -t 2:8e00 $MAIN_DISK
     else
         # BIOS partition (1mb)
-        sgdisk -n 1:2048:4095 -c 1:"BIOS" -t 1:ef02 $MAIN_DISK
+        sgdisk -g -n 1:2048:4095 -c 1:"BIOS" -t 1:ef02 $MAIN_DISK
         # The rest of the disk is for LVM
-        sgdisk -n 2:4096:0 -c 2:"LVM" -t 2:8e00 $MAIN_DISK
+        sgdisk -g -n 2:4096:0 -c 2:"LVM" -t 2:8e00 $MAIN_DISK
     fi
 
     if [[ $DUAL_DISK = 1 ]]; then
         print_status "    Second disk"
-        sgdisk --zip $SECOND_DISK
+        sgdisk -g --zap $SECOND_DISK
+
         # LVM partition (entire disk)
-        sgdisk -n 1:2048:0 -c 1:"LVM_SECOND" -t 1:8e00 $SECOND_DISK
+        sgdisk -g -n 1:2048:0 -c 1:"LVM_SECOND" -t 1:8e00 $SECOND_DISK
     fi
+
+    partprobe 2> /dev/null
 }
 
 setup_lvm() {
@@ -927,6 +961,7 @@ print_summary
 configure_mirrorlist
 
 unmount_partitions
+wipe_disks
 create_partitions
 setup_lvm
 format_partitions
