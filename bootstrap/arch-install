@@ -517,7 +517,7 @@ wipe_disks() {
         done
     fi
 
-    partprobe 2> /dev/null
+    partprobe 2> /dev/null || true
 }
 
 create_partitions(){
@@ -547,7 +547,7 @@ create_partitions(){
         sgdisk -g -n 1:2048:0 -c 1:"LVM_SECOND" -t 1:8e00 $SECOND_DISK
     fi
 
-    partprobe 2> /dev/null
+    partprobe 2> /dev/null || true
 }
 
 setup_lvm() {
