@@ -1,10 +1,8 @@
 ---
 - name: Install ssh
   pacman:
-    name: "{{item}}"
+    name: "openssh"
     state: present
-  with_items:
-    - openssh
 
 - name: Add ssh group
   group:

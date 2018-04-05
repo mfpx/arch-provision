@@ -51,3 +51,12 @@
     user: '{{ item.name }}'
     key: "{{ lookup('file', item.public_ed25519_key) }}"
   with_items: '{{ ssh_users }}'
+
+- name: Allow svcacct user to run sudo without a password
+  template:
+    src: etc-sudoers.d--svcacct.j2
+    dest: /etc/sudoers.d/svcacct
+    owner: root
+    group: root
+    mode: 0440
+    backup: no

@@ -1,19 +1,25 @@
 ---
 # This first part just replicates what was done in the base install script
+# The exception is the SSH role.  It can potentially lock you out of a machine
+# by a misconfigured SSH config so it is run here.  If it causes issuse in this
+# main script it can be removed.
 - name: Core setup (bootstrap)
   hosts: all
   become: true
   vars_files:
-    - vars/fonts.yml
+    - vars/core.yml
   roles:
     - hostname
     - pacman-config
     - install-applications
+#    - bootloader-config
     - sudo
-    - ssh
-    - setup-users
+    - ansible-user
+    - vagrant-user
+    - keymap
     - time
     - locale
+    - ssh
 
 #- name: Common setup
 #  hosts: all

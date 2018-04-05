@@ -4,10 +4,10 @@
 Vagrant.configure(2) do |config|
     config.vm.box = "bfee-parabola-bootstrapped"
 
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+
     config.vm.provider "virtualbox" do |vb|
-        vb.gui = true
-        #    vb.memory = 4096
-        #    vb.cpus = 2
+        vb.gui = false
     end
 
     config.vm.provision "ansible", run: "always" do |ansible|

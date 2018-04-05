@@ -1,5 +1,5 @@
 ---
-package_set: "Base Packages"
+package_set: "Core Packages"
 pacman_packages:
   - base
   - base-devel
@@ -24,5 +24,6 @@ pacman_packages:
   - vim
   - openssh
   - ansible
+  - terminus-font
+  - breeze-grub
   - yaourt
-

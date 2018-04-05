@@ -1,0 +1,38 @@
+---
+- name: Checking for vagrant...
+  stat:
+    path: '/etc/vagrant_box_build_time'
+  register: is_vagrant
+
+- name: Add vagrant primary group
+  group:
+    name: 'vagrant'
+    state: present
+  when: is_vagrant.stat.exists
+
+- name: Create vagrant users
+  user:
+    name: 'vagrant'
+    comment: 'Vagrant'
+    group: 'vagrant'
+    shell: '/bin/bash'
+    password: 'vagrant'
+    createhome: yes
+  when: is_vagrant.stat.exists
+
+- name: Add vagrant to the default groups
+  user:
+    name: 'vagrant'
+    groups: 'users,ssh'
+    append: yes
+  when: is_vagrant.stat.exists
+
+- name: Setup vagrant sudo configuration
+  template:
+    src: etc-sudoers.d--vagrant.j2
+    dest: /etc/sudoers.d/vagrant
+    owner: root
+    group: root
+    mode: 0440
+    backup: no
+  when: is_vagrant.stat.exists

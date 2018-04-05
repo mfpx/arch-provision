@@ -703,18 +703,15 @@ install_base_system() {
     fi
 
     # Install file system tools
-    pacstrap /mnt parted btrfs-progs f2fs-tools net-tools dosfstools mtools nfs-utils
+    pacstrap /mnt parted btrfs-progs f2fs-tools net-tools dosfstools mtools nfs-utils gptfdisk
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 4."
-
-    local PTABLE=`parted -l | grep "gpt"`
-    [[ -n $PTABLE ]] && pacstrap /mnt gptfdisk
 
     # Install networking tools
     pacstrap /mnt dialog networkmanager networkmanager-openvpn iw wireless_tools wpa_actiond wpa_supplicant
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 5."
 
     # Remaining misc tools
-    pacstrap /mnt reflector git vim openssh ansible
+    pacstrap /mnt reflector git vim openssh ansible terminus-font breeze-grub
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 6."
 
     # Add the ssh group
@@ -728,12 +725,13 @@ install_base_system() {
 configure_keymap() {
     print_info "Configure keymap"
     echo "KEYMAP=$KEYMAP" > /mnt/etc/vconsole.conf
+    echo "FONT=ter-120n" >> /mnt/etc/vconsole.conf
 }
 
 configure_fstab() {
     print_info "Write fstab"
 
-    genfstab -U -p /mnt >> /mnt/etc/fstab
+    genfstab -U -p /mnt > /mnt/etc/fstab
     [[ -f /mnt/swapfile ]] && sed -i "s/\\/mnt//" /mnt/etc/fstab
 }
 

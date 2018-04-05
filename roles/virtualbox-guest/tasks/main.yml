@@ -1,0 +1,14 @@
+---
+- name: Checking for vagrant...
+  stat:
+    path: '/etc/vagrant_box_build_time'
+  register: is_vagrant
+
+- name: Add vagrant user to the VirtualBox group
+  user:
+    name: 'vagrant'
+    groups: 'vboxsf'
+    append: yes
+  when: vbox_vagrant_user_exists.stdout == "1"
+
+

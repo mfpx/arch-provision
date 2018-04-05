@@ -1,0 +1,27 @@
+---
+- name: Add ansible primary group
+  group:
+    name: 'ansible'
+    state: present
+
+- name: Create ansible users
+  user:
+    name: 'ansible'
+    comment: 'Ansible'
+    group: 'ansible'
+    shell: '/bin/bash'
+    password: '$6$gHPAdPhFI.Y7G$0psnjnKNqEOEVy5JV5Zp7cnx9UYsa.q7AcwKU7ZZ0qtnl5QVq0FpgzdaN5lIzK5MQimHnLbps1JhcP3jAcIku1'
+    createhome: yes
+
+- name: Add ansible to the default groups
+  user:
+    name: 'ansible'
+    groups: 'users,wheel,ssh'
+    append: yes
+
+- name: Add Ansible's authorized ED25519 SSH key
+  become: true
+  authorized_key:
+    user: 'ansible'
+    exclusive: yes
+    key: "{{ lookup('file', 'keys/id_ed25519_ansible.pub') }}"

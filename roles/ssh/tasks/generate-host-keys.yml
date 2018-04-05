@@ -6,20 +6,13 @@
     get_md5: false
   register: host_keys
 
-# TODO: Verify if these are coming back or not... if so, just remove this.
-- name: Remove outdated host keys
+- name: Remove Existing Keys
   file:
     path: "{{ item }}"
     state: absent
   with_items:
     - /etc/ssh/ssh_host_dsa_key
     - /etc/ssh/ssh_host_dsa_key.pub
-
-- name: Remove Existing Keys
-  file:
-    path: "{{ item }}"
-    state: absent
-  with_items:
     - /etc/ssh/ssh_host_rsa_key
     - /etc/ssh/ssh_host_rsa_key.pub
     - /etc/ssh/ssh_host_ed25519_key
@@ -27,6 +20,13 @@
     - /etc/ssh/ssh_host_ecdsa_key
     - /etc/ssh/ssh_host_ecdsa_key.pub
   when: host_keys.stat.exists == False
+
+- name: Regenerate DSA Keys
+  command: /usr/bin/ssh-keygen -t dsa -o -a 100 -f /etc/ssh/ssh_host_rsa_key -N ''
+  args:
+    creates: /etc/ssh/ssh_host_rsa_key
+  when: host_keys.stat.exists == False
+  notify: Restart ssh
 
 - name: Regenerate RSA Keys
   command: /usr/bin/ssh-keygen -t rsa -b 4096 -o -a 100 -f /etc/ssh/ssh_host_rsa_key -N ''

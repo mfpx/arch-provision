@@ -8,44 +8,4 @@
     mode: 0644
     backup: yes
   notify:
-    - refresh pacman mirrors
-
-- name: Create pacman hook directory
-  file:
-    name: /etc/pacman.d/hooks
-    state: directory
-
-- name: Setup pacman mirror list update hook
-  template:
-    src: etc-pacman.d-hooks--mirrorlist.hook.j2
-    dest: /etc/pacman.d/hooks/mirrorlist.hook
-    owner: root
-    group: root
-    mode: 0644
-
-- name: Setup pacman cache cleanup service
-  template:
-    src: etc-systemd-system--paccache.service.j2
-    dest: /etc/systemd/system/paccache.service
-    owner: root
-    group: root
-    mode: 0644
-  notify:
-    - reload systemd config
-
-- name: Setup pacman cache cleanup timer
-  template:
-    src: etc-systemd-system--paccache.timer.j2
-    dest: /etc/systemd/system/paccache.timer
-    owner: root
-    group: root
-    mode: 0644
-  notify:
-    - reload systemd config
-    - restart paccache
-
-- name: Enable and start pacman cache cleanup timer
-  service:
-    name: paccache.timer
-    enabled: yes
-    state: started
+    - refresh pacman cache
