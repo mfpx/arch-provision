@@ -22,9 +22,9 @@
   when: host_keys.stat.exists == False
 
 - name: Regenerate DSA Keys
-  command: /usr/bin/ssh-keygen -t dsa -o -a 100 -f /etc/ssh/ssh_host_rsa_key -N ''
+  command: /usr/bin/ssh-keygen -t dsa -o -a 100 -f /etc/ssh/ssh_host_dsa_key -N ''
   args:
-    creates: /etc/ssh/ssh_host_rsa_key
+    creates: /etc/ssh/ssh_host_dsa_key
   when: host_keys.stat.exists == False
   notify: Restart ssh
 
