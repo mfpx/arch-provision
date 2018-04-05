@@ -65,13 +65,14 @@
         },
         {
             "type": "shell",
+            "expect_disconnect": true,
             "inline": [
                 "sudo systemctl reboot"
             ]
         },
         {
             "type": "shell",
-            "pause_before": "30s",
+            "pause_before": "20s",
             "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
             "scripts": [
                 "scripts/cleanup.sh",

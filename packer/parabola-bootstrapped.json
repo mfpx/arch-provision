@@ -59,7 +59,6 @@
     "provisioners": [
         {
             "type": "shell",
-            "pause_before": "30s",
             "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
             "scripts": [
                 "scripts/cleanup.sh",

@@ -824,8 +824,24 @@ configure_bootloader() {
     else
         arch_chroot "grub-install --target=i386-pc --recheck --debug /dev/sda"
     fi
-
     cp /mnt/usr/share/locale/en\@quot/LC_MESSAGES/grub.mo /mnt/boot/grub/locale/en.mo
+
+    # Update grub config
+    sed -i '/^GRUB_TIMEOUT/c\GRUB_TIMEOUT=8' /mnt/etc/default/grub
+    sed -i '/^GRUB_DISTRIBUTOR/c\GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Arch`' /mnt/etc/default/grub
+
+    if [[ $(systemd-detect-virt) == "oracle" ]]; then
+        sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT/c\GRUB_CMDLINE_LINUX_DEFAULT="quiet splash video=1024x768"' /mnt/etc/default/grub
+    else
+        sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT/c\GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"' /mnt/etc/default/grub
+    fi
+
+    sed -i '/^GRUB_GFXMODE/c\GRUB_GFXMODE=1024x768x32,1024x768x24,1024x768,auto' /mnt/etc/default/grub
+    sed -i '/^GRUB_DISABLE_RECOVERY/c\#GRUB_DISABLE_RECOVERY=true' /mnt/etc/default/grub
+    sed -i '/^GRUB_THEME/c\GRUB_THEME="/usr/share/grub/themes/breeze/theme.txt"' /mnt/etc/default/grub
+    sed -i '/^#GRUB_INIT_TUNE/c\GRUB_INIT_TUNE="480 440 1"' /mnt/etc/default/grub
+
+    # Make the config
     arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
 }
 
