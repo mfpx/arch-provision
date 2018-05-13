@@ -145,5 +145,7 @@ keys/
 # ISO files for packer installations
 packer/iso/
 packer/boxes/
+!packer/boxes/empty-packer.sh
+!packer/boxes/reload-packer.sh
 output-virtualbox-iso/
 
