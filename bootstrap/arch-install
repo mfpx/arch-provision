@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2181
 # Author: Brennan Fee
 #
 # URL to install: bash <(curl -fsSL https://git.io/vNDOZ)
@@ -22,13 +23,13 @@ BGreen=${Bold}${Green}
 BYellow=${Bold}${Yellow}
 
 # Paths
-WORKING_DIR=`pwd`
-LOG="{$WORKING_DIR/`basename ${0}`.log"
-[[ -f $LOG ]] && rm -f $LOG
+WORKING_DIR=$(pwd)
+LOG="{$WORKING_DIR/$(basename "${0}").log"
+[[ -f $LOG ]] && rm -f "$LOG"
 
 # Flags and variables
-SYS_ARCH=`uname -m` # Architecture (x86_64)
-DISTRO=`uname -n`
+SYS_ARCH=$(uname -m) # Architecture (x86_64)
+DISTRO=$(uname -n)
 UEFI=0
 XPINGS=0 # CONNECTION CHECK
 KEYMAP="us"
@@ -45,7 +46,7 @@ ANSIBLE_PWD=""
 ### Common Helper Functions
 
 print_line() {
-    printf "%$(tput cols)s\n"|tr ' ' '-'
+    printf "%$(tput cols)s\n" | tr ' ' '-'
 }
 
 blank_line() {
@@ -61,40 +62,40 @@ print_title() {
 }
 
 print_title_info() {
-    T_COLS=`tput cols`
-    echo -e "${Bold}$1${Reset}\n" | fold -sw $(( $T_COLS - 18 )) | sed 's/^/\t/'
+    T_COLS=$(tput cols)
+    echo -e "${Bold}$1${Reset}\n" | fold -sw $((T_COLS - 18)) | sed 's/^/\t/'
 }
 
 print_status() {
-    T_COLS=`tput cols`
-    echo -e "$1${Reset}" | fold -sw $(( $T_COLS - 1 ))
+    T_COLS=$(tput cols)
+    echo -e "$1${Reset}" | fold -sw $((T_COLS - 1))
 }
 
 print_info() {
-    T_COLS=`tput cols`
-    echo -e "${Bold}$1${Reset}" | fold -sw $(( $T_COLS - 1 ))
+    T_COLS=$(tput cols)
+    echo -e "${Bold}$1${Reset}" | fold -sw $((T_COLS - 1))
 }
 
 print_warning() {
-    T_COLS=`tput cols`
-    echo -e "${BYellow}$1${Reset}" | fold -sw $(( $T_COLS - 1 ))
+    T_COLS=$(tput cols)
+    echo -e "${BYellow}$1${Reset}" | fold -sw $((T_COLS - 1))
 }
 
 print_success() {
-    T_COLS=`tput cols`
-    echo -e "${BGreen}$1${Reset}" | fold -sw $(( $T_COLS - 1 ))
+    T_COLS=$(tput cols)
+    echo -e "${BGreen}$1${Reset}" | fold -sw $((T_COLS - 1))
 }
 
 error_msg() {
-    T_COLS=`tput cols`
-    echo -e "${BRed}$1${Reset}\n" | fold -sw $(( $T_COLS - 1 ))
+    T_COLS=$(tput cols)
+    echo -e "${BRed}$1${Reset}\n" | fold -sw $((T_COLS - 1))
     exit 1
 }
 
 pause_function() {
     print_line
-    if [[ ! "${ai_automatic_install:-}" = 1 ]]; then
-        read -e -sn 1 -p "Press enter to continue..."
+    if [[ ${ai_automatic_install:-} != 1 ]]; then
+        read -re -sn 1 -p "Press enter to continue..."
     fi
 }
 
@@ -105,14 +106,14 @@ invalid_option() {
 
 contains_element() {
     #check if an element exist in a string
-    for e in "${@:2}"; do [[ $e == $1 ]] && break; done;
+    for e in "${@:2}"; do [[ $e == "$1" ]] && break; done
 }
 
 print_summary() {
     print_title "Summary"
     print_title_info "Below is a summary of your selections and any auto-detected system information.  If anything is wrong cancel out now with Ctrl-C.  If you continue the installation will begin and there will be no more input required."
     print_line
-    if [[ $UEFI = 1 ]]; then
+    if [[ $UEFI == 1 ]]; then
         print_status "The machine architecture is $SYS_ARCH and UEFI has been found."
     else
         print_status "The machine architecture is $SYS_ARCH and a BIOS has been found."
@@ -133,7 +134,7 @@ print_summary() {
     esac
 
     blank_line
-    if [[ $DUAL_DISK = 0 ]]; then
+    if [[ $DUAL_DISK == 0 ]]; then
         print_status "This is a single disk system so installation of all files will happen to $MAIN_DISK."
     else
         print_status "This is a dual disk system."
@@ -152,7 +153,7 @@ arch_chroot() {
 is_package_installed() {
     #check if a package is already installed
     for PKG in $1; do
-        pacman -Q $PKG &> /dev/null && return 0;
+        pacman -Q "$PKG" &>/dev/null && return 0
     done
     return 1
 }
@@ -175,13 +176,14 @@ check_archlinux() {
 
 check_boot_system() {
     if [[ "$(cat /sys/class/dmi/id/sys_vendor)" == 'Apple Inc.' ]] || [[ "$(cat /sys/class/dmi/id/sys_vendor)" == 'Apple Computer, Inc.' ]]; then
-        modprobe -r -q efivars || true  # if MAC
+        modprobe -r -q efivars || true # if MAC
     else
-        modprobe -q efivarfs            # all others
+        modprobe -q efivarfs # all others
     fi
 
     if [[ -d "/sys/firmware/efi/" ]]; then
         ## Mount efivarfs if it is not already mounted
+        # shellcheck disable=SC2143
         if [[ -z $(mount | grep /sys/firmware/efi/efivars) ]]; then
             mount -t efivarfs efivarfs /sys/firmware/efi/efivars
         fi
@@ -191,36 +193,37 @@ check_boot_system() {
     fi
 }
 
-check_connection(){
-    XPINGS=$(( $XPINGS + 1 ))
+check_connection() {
+    XPINGS=$((XPINGS + 1))
     connection_test() {
-        ping -q -w 1 -c 1 `ip r | grep default | awk 'NR==1 {print $3}'` &> /dev/null && return 1 || return 0
+        ping -q -w 1 -c 1 "$(ip r | grep default | awk 'NR==1 {print $3}')" &>/dev/null && return 1 || return 0
     }
-    WIRED_DEV=`ip link | grep "ens\|eno\|enp" | awk '{print $2}' | sed 's/://' | sed '1!d'`
-    WIRELESS_DEV=`ip link | grep wlp | awk '{print $2}' | sed 's/://' | sed '1!d'`
+    WIRED_DEV=$(ip link | grep "ens\|eno\|enp" | awk '{print $2}' | sed 's/://' | sed '1!d')
+    WIRELESS_DEV=$(ip link | grep wlp | awk '{print $2}' | sed 's/://' | sed '1!d')
     if connection_test; then
         print_warning "ERROR! Connection not Found."
         print_info "Network Setup"
         local _connection_opts=("Wired Automatic" "Wired Manual" "Wireless" "Skip")
         PS3="Enter your option: "
+        # shellcheck disable=SC2034
         select CONNECTION_TYPE in "${_connection_opts[@]}"; do
             case "$REPLY" in
                 1)
-                    systemctl start dhcpcd@${WIRED_DEV}.service
+                    systemctl start "dhcpcd@${WIRED_DEV}.service"
                     break
                     ;;
                 2)
-                    systemctl stop dhcpcd@${WIRED_DEV}.service
-                    read -p "IP Address: " IP_ADDR
-                    read -p "Submask: " SUBMASK
-                    read -p "Gateway: " GATEWAY
-                    ip link set ${WIRED_DEV} up
-                    ip addr add ${IP_ADDR}/${SUBMASK} dev ${WIRED_DEV}
-                    ip route add default via ${GATEWAY}
+                    systemctl stop "dhcpcd@${WIRED_DEV}.service"
+                    read -rp "IP Address: " IP_ADDR
+                    read -rp "Submask: " SUBMASK
+                    read -rp "Gateway: " GATEWAY
+                    ip link set "${WIRED_DEV}" up
+                    ip addr add "${IP_ADDR}/${SUBMASK}" dev "${WIRED_DEV}"
+                    ip route add default via "${GATEWAY}"
                     break
                     ;;
                 3)
-                    wifi-menu ${WIRELESS_DEV}
+                    wifi-menu "${WIRELESS_DEV}"
                     break
                     ;;
                 4)
@@ -243,13 +246,13 @@ check_connection(){
 ### Prompts / User interaction
 
 ask_for_hostname() {
-    if [[ ! -z "${ai_host_name:-}" ]]; then
+    if [[ -n ${ai_host_name:-} ]]; then
         HOST_NAME="${ai_host_name}"
         return
     fi
 
-    if [[ "${ai_automatic_install:-}" = 1 ]]; then
-        if [[ $DISTRO = 'parabolaiso' ]]; then
+    if [[ ${ai_automatic_install:-} == 1 ]]; then
+        if [[ $DISTRO == 'parabolaiso' ]]; then
             HOST_NAME="parabola-$((1 + RANDOM % 1000))"
         else
             HOST_NAME="arch-$((1 + RANDOM % 1000))"
@@ -260,9 +263,9 @@ ask_for_hostname() {
 
     print_title "Hostname"
     print_title_info "Pick a hostname for this machine.  Press enter to have a random hostname selected."
-    read -p "Hostname [ex: archlinux]: " HOST_NAME
-    if [[ $HOST_NAME = "" ]]; then
-        if [[ $DISTRO = 'parabolaiso' ]]; then
+    read -rp "Hostname [ex: archlinux]: " HOST_NAME
+    if [[ $HOST_NAME == "" ]]; then
+        if [[ $DISTRO == 'parabolaiso' ]]; then
             HOST_NAME="parabola-$((1 + RANDOM % 1000))"
         else
             HOST_NAME="arch-$((1 + RANDOM % 1000))"
@@ -271,20 +274,20 @@ ask_for_hostname() {
 }
 
 ask_for_main_disk() {
-    if [[ ! -z "${ai_main_disk:-}" ]]; then
+    if [[ -n ${ai_main_disk:-} ]]; then
         MAIN_DISK="${ai_main_disk}"
         return
     fi
 
-    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+    if [[ ${ai_automatic_install:-} == 1 ]]; then
         MAIN_DISK="/dev/sda"
         return
     fi
 
     print_info "Determining main disk..."
-    devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}'`);
+    devices_list=($(lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}'))
 
-    if [[ ${#devices_list[@]} = 1 ]]; then
+    if [[ ${#devices_list[@]} == 1 ]]; then
         device=${devices_list[0]}
     else
         print_title "Main Disk Selection"
@@ -305,21 +308,21 @@ ask_for_main_disk() {
 }
 
 ask_for_second_disk() {
-    if [[ ! -z "${ai_second_disk:-}" ]]; then
+    if [[ -n ${ai_second_disk:-} ]]; then
         SECOND_DISK="${ai_second_disk}"
         DUAL_DISK=0
         return
     fi
 
-    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+    if [[ ${ai_automatic_install:-} == 1 ]]; then
         SECOND_DISK=""
         DUAL_DISK=0
         return
     fi
 
-    device_count=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -vc $MAIN_DISK || true`);
+    device_count=($(lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -vc "$MAIN_DISK" || true))
 
-    if [[ $device_count = 0 ]]; then
+    if [[ ${#device_count[@]} == 0 ]]; then
         DUAL_DISK=0
         SECOND_DISK=""
         return
@@ -327,12 +330,12 @@ ask_for_second_disk() {
 
     print_title "Second Disk Selection"
     print_title_info "This script can support a two-disk installation.  The file system layout is different in this case."
-    read -n 1 -p "Do you want to use a dual disk setup? (y/N) " SELECT_SECOND
-    if [[ $SELECT_SECOND = "" ]]; then
+    read -rn 1 -p "Do you want to use a dual disk setup? (y/N) " SELECT_SECOND
+    if [[ $SELECT_SECOND == "" ]]; then
         SELECT_SECOND="N"
     fi
 
-    if [[ $SELECT_SECOND = "n" ]] || [[ $SELECT_SECOND = "N" ]]; then
+    if [[ $SELECT_SECOND == "n" ]] || [[ $SELECT_SECOND == "N" ]]; then
         DUAL_DISK=0
         SECOND_DISK=""
         return
@@ -340,7 +343,7 @@ ask_for_second_disk() {
 
     blank_line
     lsblk --nodeps --list --exclude 1,11,7 --output "name,size,type"
-    devices_list=(`lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -v $MAIN_DISK`);
+    devices_list=($(lsblk --nodeps --noheading --list --exclude 1,11,7 | awk '{print "/dev/" $1}' | grep -v "$MAIN_DISK"))
     blank_line
     PS3="Enter your option: "
     echo -e "Select second drive:\n"
@@ -357,29 +360,29 @@ ask_for_second_disk() {
 }
 
 ask_for_kernel_level() {
-    if [[ ! -z "${ai_kernel_version:-}" ]]; then
+    if [[ -n ${ai_kernel_version:-} ]]; then
         KERNEL_VERSION="${ai_kernel_version}"
         return
     fi
 
-    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+    if [[ ${ai_automatic_install:-} == 1 ]]; then
         KERNEL_VERSION="lts"
         return
     fi
 
     print_title "Kernel Selection"
     print_title_info "Select which linux kernel to install. The LTS version is generally prefered and more stable."
-    version_list=("linux (default kernel)" "linux-lts (long term support, recommended)" "linux-hardened (security features)");
+    version_list=("linux (default kernel)" "linux-lts (long term support, recommended)" "linux-hardened (security features)")
     blank_line
     PS3="Enter your option: "
     echo -e "Select linux version to install\n"
     select VERSION in "${version_list[@]}"; do
         if contains_element "$VERSION" "${version_list[@]}"; then
-            if [ "linux (default kernel)" == "$VERSION" ];then
+            if [ "linux (default kernel)" == "$VERSION" ]; then
                 KERNEL_VERSION="default"
-            elif [ "linux-lts (long term support, recommended)" == "$VERSION" ];then
+            elif [ "linux-lts (long term support, recommended)" == "$VERSION" ]; then
                 KERNEL_VERSION="lts"
-            elif [ "linux-hardened (security features)" == "$VERSION" ];then
+            elif [ "linux-hardened (security features)" == "$VERSION" ]; then
                 KERNEL_VERSION="hard"
             fi
             break
@@ -390,12 +393,12 @@ ask_for_kernel_level() {
 }
 
 ask_for_root_password() {
-    if [[ ! -z "${ai_root_pwd_hash:-}" ]]; then
+    if [[ -n ${ai_root_pwd_hash:-} ]]; then
         return
     fi
 
-    if [[ "${ai_automatic_install:-}" = 1 ]]; then
-        if [[ "${ai_is_vagrant:-}" = 1 ]]; then
+    if [[ ${ai_automatic_install:-} == 1 ]]; then
+        if [[ ${ai_is_vagrant:-} == 1 ]]; then
             ROOT_PWD="vagrant"
         else
             ROOT_PWD="password"
@@ -410,15 +413,15 @@ ask_for_root_password() {
     local was_set="false"
 
     blank_line
-    while [[ $was_set = "false" ]]; do
+    while [[ $was_set == "false" ]]; do
         local pwd1=""
         local pwd2=""
-        read -sp "Root password: " pwd1
+        read -srp "Root password: " pwd1
         echo -e ""
-        read -sp "Once again: " pwd2
+        read -srp "Once again: " pwd2
 
-        if [[ $pwd1 = $pwd2 ]]; then
-            ROOT_PWD=$pwd1
+        if [[ $pwd1 == "$pwd2" ]]; then
+            ROOT_PWD="$pwd1"
             was_set="true"
         else
             blank_line
@@ -428,11 +431,11 @@ ask_for_root_password() {
 }
 
 ask_for_ansible_password() {
-    if [[ ! -z "${ai_ansible_pwd_hash:-}" ]]; then
+    if [[ -n ${ai_ansible_pwd_hash:-} ]]; then
         return
     fi
 
-    if [[ "${ai_automatic_install:-}" = 1 ]]; then
+    if [[ ${ai_automatic_install:-} == 1 ]]; then
         ANSIBLE_PWD="ansible"
         return
     fi
@@ -443,15 +446,15 @@ ask_for_ansible_password() {
     local was_set="false"
 
     blank_line
-    while [[ $was_set = "false" ]]; do
+    while [[ $was_set == "false" ]]; do
         local pwd1=""
         local pwd2=""
-        read -sp "Ansible password: " pwd1
+        read -srp "Ansible password: " pwd1
         echo -e ""
-        read -sp "Once again: " pwd2
+        read -srp "Once again: " pwd2
 
-        if [[ $pwd1 = $pwd2 ]]; then
-            ANSIBLE_PWD=$pwd1
+        if [[ $pwd1 == "$pwd2" ]]; then
+            ANSIBLE_PWD="$pwd1"
             was_set="true"
         else
             blank_line
@@ -462,7 +465,7 @@ ask_for_ansible_password() {
 
 ### Installation/configuration functions
 
-configure_mirrorlist(){
+configure_mirrorlist() {
     print_info "Configuring repository mirrorlist"
 
     pacman -Syy
@@ -485,25 +488,30 @@ configure_mirrorlist(){
     pacman -Syy
 }
 
-configure_mirrorlist_old(){
+configure_mirrorlist_old() {
     print_info "Configuring repository mirrorlist"
 
     pacman -Syy
 
     tmpfile=$(mktemp --suffix=-mirrorlist)
 
-    if [[ $DISTRO = 'parabolaiso' ]]; then
-        echo 'Server = https://mirror.fsf.org/$repo/os/$arch' > ${tmpfile}
-        echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >> ${tmpfile}
-        echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >> ${tmpfile}
-        echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >> ${tmpfile}
-        echo 'Server = https://parabola.serverpit.com/$repo/os/$arch' >> ${tmpfile}
+    if [[ $DISTRO == 'parabolaiso' ]]; then
+        # shellcheck disable=SC2016
+        echo 'Server = https://mirror.fsf.org/$repo/os/$arch' >"${tmpfile}"
+        # shellcheck disable=SC2016,SC2129
+        echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >>"${tmpfile}"
+        # shellcheck disable=SC2016
+        echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >>"${tmpfile}"
+        # shellcheck disable=SC2016
+        echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >>"${tmpfile}"
+        # shellcheck disable=SC2016
+        echo 'Server = https://parabola.serverpit.com/$repo/os/$arch' >>"${tmpfile}"
     else
         url="https://www.archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on"
 
         # Get latest mirror list and save to tmpfile
-        curl -fsSL -o ${tmpfile} ${url}
-        sed -i 's/^#Server/Server/g' ${tmpfile}
+        curl -fsSL -o "${tmpfile}" "${url}"
+        sed -i 's/^#Server/Server/g' "${tmpfile}"
     fi
 
     # Backup and replace current mirrorlist file (if new file is non-zero)
@@ -513,14 +521,14 @@ configure_mirrorlist_old(){
         mv -i "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.orig"
 
         print_status "    Rotating the new list into place..."
-        mv -i ${tmpfile} "/etc/pacman.d/mirrorlist"
+        mv -i "${tmpfile}" "/etc/pacman.d/mirrorlist"
     else
-      print_warning "    Unable to update, could not download list."
+        print_warning "    Unable to update, could not download list."
     fi
 
     # Rank the mirrors
     cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.tmp
-    rankmirrors /etc/pacman.d/mirrorlist.tmp > /etc/pacman.d/mirrorlist
+    rankmirrors /etc/pacman.d/mirrorlist.tmp >/etc/pacman.d/mirrorlist
     rm /etc/pacman.d/mirrorlist.tmp
 
     # Allow global read access (required for non-root yaourt execution)
@@ -530,11 +538,11 @@ configure_mirrorlist_old(){
     pacman -Syy
 }
 
-unmount_partitions(){
-    mounted_partitions=(`lsblk | grep /mnt | awk '{print $7}' | sort -r`)
+unmount_partitions() {
+    mounted_partitions=($(lsblk | grep /mnt | awk '{print $7}' | sort -r))
     swapoff -a
-    for i in ${mounted_partitions[@]}; do
-        umount $i
+    for i in "${mounted_partitions[@]}"; do
+        umount "$i"
     done
 }
 
@@ -542,48 +550,48 @@ wipe_disks() {
     print_info "Wiping disks"
 
     print_info "    Wiping main disk partitions"
-    wipefs --all --force "${MAIN_DISK}*" 2> /dev/null || true
+    wipefs --all --force "${MAIN_DISK}*" 2>/dev/null || true
     wipefs --all --force "${MAIN_DISK}" || true
     dd if=/dev/zero of="$MAIN_DISK" bs=512 count=10 conv=notrunc
 
-    if [[ $DUAL_DISK = 1 ]]; then
+    if [[ $DUAL_DISK == 1 ]]; then
         print_info "    Wiping second disk partitions"
-        wipefs --all --force "${SECOND_DISK}*" 2> /dev/null || true
+        wipefs --all --force "${SECOND_DISK}*" 2>/dev/null || true
         wipefs --all --force "${SECOND_DISK}" || true
         dd if=/dev/zero of="$SECOND_DISK" bs=512 count=10 conv=notrunc
     fi
 
-    partprobe 2> /dev/null || true
+    partprobe 2>/dev/null || true
 }
 
-create_partitions(){
+create_partitions() {
     print_info "Creating partitions"
 
     print_status "    Main disk"
     # Clear out the partitions
-    sgdisk -g --zap $MAIN_DISK
+    sgdisk -g --zap "$MAIN_DISK"
 
-    if [[ $UEFI = 1 ]]; then
+    if [[ $UEFI == 1 ]]; then
         # EFI partition (500mb)
-        sgdisk -g -n 1:2048:1026047 -c 1:"EFI" -t 1:ef00 $MAIN_DISK
+        sgdisk -g -n 1:2048:1026047 -c 1:"EFI" -t 1:ef00 "$MAIN_DISK"
         # The rest of the disk is for LVM
-        sgdisk -g -n 2:1026048:0 -c 2:"LVM" -t 2:8e00 $MAIN_DISK
+        sgdisk -g -n 2:1026048:0 -c 2:"LVM" -t 2:8e00 "$MAIN_DISK"
     else
         # BIOS partition (1mb)
-        sgdisk -g -n 1:2048:4095 -c 1:"BIOS" -t 1:ef02 $MAIN_DISK
+        sgdisk -g -n 1:2048:4095 -c 1:"BIOS" -t 1:ef02 "$MAIN_DISK"
         # The rest of the disk is for LVM
-        sgdisk -g -n 2:4096:0 -c 2:"LVM" -t 2:8e00 $MAIN_DISK
+        sgdisk -g -n 2:4096:0 -c 2:"LVM" -t 2:8e00 "$MAIN_DISK"
     fi
 
-    if [[ $DUAL_DISK = 1 ]]; then
+    if [[ $DUAL_DISK == 1 ]]; then
         print_status "    Second disk"
-        sgdisk -g --zap $SECOND_DISK
+        sgdisk -g --zap "$SECOND_DISK"
 
         # LVM partition (entire disk)
-        sgdisk -g -n 1:2048:0 -c 1:"LVM_SECOND" -t 1:8e00 $SECOND_DISK
+        sgdisk -g -n 1:2048:0 -c 1:"LVM_SECOND" -t 1:8e00 "$SECOND_DISK"
     fi
 
-    partprobe 2> /dev/null || true
+    partprobe 2>/dev/null || true
 }
 
 setup_lvm() {
@@ -592,7 +600,7 @@ setup_lvm() {
     pvcreate "${MAIN_DISK}2"
     vgcreate "vg_main" "${MAIN_DISK}2"
 
-    if [[ $DUAL_DISK = 0 ]]; then
+    if [[ $DUAL_DISK == 0 ]]; then
         lvcreate -l 5%VG "vg_main" -n lv_var
         lvcreate -l 40%VG "vg_main" -n lv_root
         lvcreate -l 40%VG "vg_main" -n lv_home
@@ -611,7 +619,7 @@ setup_lvm() {
 format_partitions() {
     print_info "Formatting partitions"
 
-    if [[ $UEFI = 1 ]]; then
+    if [[ $UEFI == 1 ]]; then
         # Format the EFI partition
         mkfs.vfat -F32 "${MAIN_DISK}1"
     fi
@@ -619,7 +627,7 @@ format_partitions() {
     # Now the LVM partitions...
     mkfs.ext4 "/dev/mapper/vg_main-lv_var"
     mkfs.ext4 "/dev/mapper/vg_main-lv_root"
-    if [[ $DUAL_DISK = 0 ]]; then
+    if [[ $DUAL_DISK == 0 ]]; then
         mkfs.ext4 "/dev/mapper/vg_main-lv_home"
         mkfs.ext4 "/dev/mapper/vg_main-lv_data"
     else
@@ -640,20 +648,20 @@ mount_partitions() {
     mkdir -p "/mnt/home"
     mkdir -p "/mnt/data"
 
-    if [[ $UEFI = 1 ]]; then
+    if [[ $UEFI == 1 ]]; then
         mount -t vfat -o defaults,rw,relatime,utf8,errors=remount-ro "${MAIN_DISK}1" "/mnt/boot/efi"
     fi
 
     # Swap file
-    total_memory=`grep MemTotal /proc/meminfo | awk '{print ($2/1024)*1.5}' | sed 's/\..*//'`
-    fallocate -l ${total_memory}M /mnt/swapfile
+    total_memory=$(grep MemTotal /proc/meminfo | awk '{print ($2/1024)*1.5}' | sed 's/\..*//')
+    fallocate -l "${total_memory}M" /mnt/swapfile
     chmod 600 /mnt/swapfile
     mkswap /mnt/swapfile
     swapon /mnt/swapfile
 
     # Mount others
     mount -t ext4 -o defaults,rw,relatime /dev/mapper/vg_main-lv_var /mnt/var
-    if [[ $DUAL_DISK = 0 ]]; then
+    if [[ $DUAL_DISK == 0 ]]; then
         mount -t ext4 -o defaults,rw,relatime /dev/mapper/vg_main-lv_home /mnt/home
         mount -t ext4 -o defaults,rw,relatime /dev/mapper/vg_main-lv_data /mnt/data
     else
@@ -665,7 +673,7 @@ mount_partitions() {
 install_base_system() {
     print_info "Installing base system"
 
-    if [[ $DISTRO = 'parabolaiso' ]]; then
+    if [[ $DISTRO == 'parabolaiso' ]]; then
         pacman -S --noconfirm parabola-keyring
     else
         pacman -S --noconfirm archlinux-keyring
@@ -685,14 +693,15 @@ install_base_system() {
             ;;
     esac
 
-    if [[ $DISTRO = 'parabolaiso' ]]; then
+    if [[ $DISTRO == 'parabolaiso' ]]; then
         setup_repo() {
-            local _has_repo=`grep -n "\[$1\]" /etc/pacman.conf | cut -f1 -d:`
+            local _has_repo
+            _has_repo=$(grep -n "\[$1\]" /etc/pacman.conf | cut -f1 -d:)
             if [[ -z $_has_repo ]]; then
-                echo -e "\n[$1]\nInclude = /etc/pacman.d/mirrorlist" >> /etc/pacman.conf
+                echo -e "\n[$1]\nInclude = /etc/pacman.d/mirrorlist" >>/etc/pacman.conf
             else
                 sed -i "${_has_repo}s/^#//" /etc/pacman.conf
-                local _has_repo=$(( ${_has_repo} + 1 ))
+                local _has_repo=$((_has_repo + 1))
                 sed -i "${_has_repo}s/^#//" /etc/pacman.conf
             fi
         }
@@ -724,21 +733,21 @@ install_base_system() {
 
 configure_keymap() {
     print_info "Configure keymap"
-    echo "KEYMAP=$KEYMAP" > /mnt/etc/vconsole.conf
-    echo "FONT=ter-120n" >> /mnt/etc/vconsole.conf
+    echo "KEYMAP=$KEYMAP" >/mnt/etc/vconsole.conf
+    echo "FONT=ter-120n" >>/mnt/etc/vconsole.conf
 }
 
 configure_fstab() {
     print_info "Write fstab"
 
-    genfstab -U -p /mnt > /mnt/etc/fstab
-    [[ -f /mnt/swapfile ]] && sed -i "s/\\/mnt//" /mnt/etc/fstab
+    genfstab -U -p /mnt >/mnt/etc/fstab
+    [[ -f /mnt/swapfile ]] && sed -i 's/\/mnt//' /mnt/etc/fstab
 }
 
 configure_hostname() {
     print_info "Setup hostname"
 
-    echo "$HOST_NAME" > /mnt/etc/hostname
+    echo "$HOST_NAME" >/mnt/etc/hostname
     arch_chroot "sed -i '/127.0.0.1/s/$/ '${HOST_NAME}'/' /etc/hosts"
     arch_chroot "sed -i '/::1/s/$/ '${HOST_NAME}'/' /etc/hosts"
 }
@@ -749,20 +758,20 @@ configure_timezone() {
     arch_chroot "ln -sf /usr/share/zoneinfo/US/Central /etc/localtime"
     arch_chroot "sed -i '/#NTP=/d' /etc/systemd/timesyncd.conf"
     arch_chroot "sed -i 's/#Fallback//' /etc/systemd/timesyncd.conf"
-    arch_chroot "echo \"FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.us.pool.ntp.org\" >> /etc/systemd/timesyncd.conf"
+    arch_chroot 'echo "FallbackNTP=0.pool.ntp.org 1.pool.ntp.org 0.us.pool.ntp.org" >> /etc/systemd/timesyncd.conf'
     arch_chroot "systemctl enable systemd-timesyncd.service"
 }
 
 configure_clock() {
     print_info "Configuring clock"
-    arch_chroot "hwclock --systohc --utc";
+    arch_chroot "hwclock --systohc --utc"
 }
 
 configure_locale() {
     print_info "Configuring locale"
-    echo "LANG=\"en_US.UTF-8\"" > /mnt/etc/locale.conf
-    echo "LANGUAGE=\"en_US:en\"" >> /mnt/etc/locale.conf
-    echo "LC_ALL=\"en_US.UTF-8\"" >> /mnt/etc/locale.conf
+    echo 'LANG="en_US.UTF-8"' >/mnt/etc/locale.conf
+    echo 'LANGUAGE="en_US:en"' >>/mnt/etc/locale.conf
+    echo 'LC_ALL="en_US.UTF-8"' >>/mnt/etc/locale.conf
     arch_chroot "sed -i 's/# en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
     arch_chroot "sed -i 's/#en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen"
     arch_chroot "locale-gen"
@@ -777,33 +786,13 @@ configure_mkinitcpio() {
     sed -i 's/#COMPRESSION="lz4"/COMPRESSION="lz4"/' /mnt/etc/mkinitcpio.conf
     sed -i '/^#COMPRESSION_OPTIONS/c\COMPRESSION_OPTIONS=(-3)' /mnt/etc/mkinitcpio.conf
 
-    if [[ $DISTRO = 'parabolaiso' ]]; then
-        arch_chroot "mkinitcpio -p linux-libre"
-        case "$KERNEL_VERSION" in
-            "lts")
-                arch_chroot "mkinitcpio -p linux-libre-lts"
-                ;;
-            "hard")
-                arch_chroot "mkinitcpio -p linux-libre-hardened"
-                ;;
-        esac
-    else
-        arch_chroot "mkinitcpio -p linux"
-        case "$KERNEL_VERSION" in
-            "lts")
-                arch_chroot "mkinitcpio -p linux-lts"
-                ;;
-            "hard")
-                arch_chroot "mkinitcpio -p linux-hardened"
-                ;;
-        esac
-    fi
+    arch_chroot "mkinitcpio -P"
 }
 
 install_bootloader() {
     print_info "Install bootloader"
 
-    if [[ $UEFI = 1 ]]; then
+    if [[ $UEFI == 1 ]]; then
         pacstrap /mnt grub os-prober
         [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 7."
     else
@@ -811,7 +800,7 @@ install_bootloader() {
         [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 8."
     fi
 
-    if [[ $UEFI = 1 ]]; then
+    if [[ $UEFI == 1 ]]; then
         pacstrap /mnt efibootmgr
     fi
 }
@@ -819,7 +808,7 @@ install_bootloader() {
 configure_bootloader() {
     print_info "Configure bootloader"
 
-    if [[ $UEFI = 1 ]]; then
+    if [[ $UEFI == 1 ]]; then
         arch_chroot "grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub --recheck"
     else
         arch_chroot "grub-install --target=i386-pc --recheck --debug /dev/sda"
@@ -828,6 +817,7 @@ configure_bootloader() {
 
     # Update grub config
     sed -i '/^GRUB_TIMEOUT/c\GRUB_TIMEOUT=8' /mnt/etc/default/grub
+    # shellcheck disable=SC2016
     sed -i '/^GRUB_DISTRIBUTOR/c\GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Arch`' /mnt/etc/default/grub
 
     if [[ $(systemd-detect-virt) == "oracle" ]]; then
@@ -847,7 +837,7 @@ configure_bootloader() {
 
 configure_sudo() {
     print_info "Configuring sudo..."
-    echo '%wheel ALL=(ALL) ALL' >> /mnt/etc/sudoers.d/wheel
+    echo '%wheel ALL=(ALL) ALL' >>/mnt/etc/sudoers.d/wheel
     chmod 440 /mnt/etc/sudoers.d/wheel
 }
 
@@ -856,12 +846,13 @@ configure_pacman() {
     cp -v /mnt/etc/pacman.conf /mnt/etc/pacman.conf.orig
 
     setup_repo() {
-        local _has_repo=`grep -n "\[$1\]" /mnt/etc/pacman.conf | cut -f1 -d:`
+        local _has_repo
+        _has_repo=$(grep -n "\[$1\]" /mnt/etc/pacman.conf | cut -f1 -d:)
         if [[ -z $_has_repo ]]; then
-            echo -e "\n[$1]\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
+            echo -e "\n[$1]\nInclude = /etc/pacman.d/mirrorlist" >>/mnt/etc/pacman.conf
         else
             sed -i "${_has_repo}s/^#//" /mnt/etc/pacman.conf
-            local _has_repo=$(( ${_has_repo} + 1 ))
+            local _has_repo=$((_has_repo + 1))
             sed -i "${_has_repo}s/^#//" /mnt/etc/pacman.conf
         fi
     }
@@ -871,9 +862,9 @@ configure_pacman() {
         setup_repo "multilib"
         echo -e '\nMultilib repository added into pacman.conf file'
 
-        if [[ $DISTRO = 'parabolaiso' ]]; then
+        if [[ $DISTRO == 'parabolaiso' ]]; then
             setup_repo "nonprism"
-#            setup_repo "nonprism-multilib"
+            #            setup_repo "nonprism-multilib"
             setup_repo "libre-multilib"
             setup_repo "pcr-multilib"
             echo -e '\nParabola repositories added into pacman.conf file'
@@ -885,9 +876,10 @@ install_yaourt() {
     print_info "Install Yaourt..."
 
     # Setup archlinuxfr repository
-    local _has_fr=`grep -n "\[archlinuxfr\]" /mnt/etc/pacman.conf | cut -f1 -d:`
+    local _has_fr
+    _has_fr=$(grep -n "\[archlinuxfr\]" /mnt/etc/pacman.conf | cut -f1 -d:)
     if [[ -z $_has_fr ]]; then
-        echo -e "\n[archlinuxfr]\nSigLevel = Never\nServer = https://repo.archlinux.fr/\$arch" >> /mnt/etc/pacman.conf
+        echo -e "\n[archlinuxfr]\nSigLevel = Never\nServer = https://repo.archlinux.fr/\$arch" >>/mnt/etc/pacman.conf
         echo -e '\nArchlinuxfr repository added into pacman.conf file'
     fi
 
@@ -905,7 +897,7 @@ pull_repo() {
 root_password() {
     print_info "Setting up root account"
 
-    if [[ ! -z "${ai_root_pwd_hash:-}" ]]; then
+    if [[ -n ${ai_root_pwd_hash:-} ]]; then
         arch_chroot "echo -n 'root:${ai_root_pwd_hash}' | chpasswd -e"
     else
         arch_chroot "echo -n 'root:$ROOT_PWD' | chpasswd -c SHA512"
@@ -917,7 +909,7 @@ setup_ansible_account() {
 
     arch_chroot "useradd -m -G wheel -s /bin/bash ansible"
 
-    if [[ ! -z "${ai_ansible_pwd_hash:-}" ]]; then
+    if [[ -n ${ai_ansible_pwd_hash:-} ]]; then
         arch_chroot "echo -n 'ansible:${ai_ansible_pwd_hash}' | chpasswd -e"
     else
         arch_chroot "echo -n 'ansible:$ANSIBLE_PWD' | chpasswd -c SHA512"
@@ -927,9 +919,9 @@ setup_ansible_account() {
 
     mkdir -p /mnt/home/ansible/.ssh
     chmod 0700 /mnt/home/ansible/.ssh
-    key1="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAH5mZH2G4fD3f5ofopNdg1NfA4wE4ASwD4drU+w8RYR ansible@tts.lan";
+    key1="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAH5mZH2G4fD3f5ofopNdg1NfA4wE4ASwD4drU+w8RYR ansible@tts.lan"
     key2="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC4IwiR3EIWs3+2/yOf8HAsC6FVG8UeSCDxrsZkjRy2RbMko1KbvH35Wwr8f8eli7Wgs9DW0qCErVhIdm+7fwtKfVbC7L4j+VyrBEVUGIb8qTAHtHE18ma89GLqFSNRbl1NTv9O/BvCi43qnNqVomc3alY4dFhxiUMP8mAYkmYTpeDMaCIenmdC/CnKDxcqVx4czcqqMVUXvMIAJ88NRCuZ8Cn90AInnt7wbr47As25YNFI+M510oqAVOz27a+uYKPq8S2dxaB1Cz66bHYHQ6AijMweLSfYW1G4hWUXXwWLWDjDSW4k1JEOXfjBFcwA3Mu/Ib8ew4k+FHgT5nxoIjwiZBF1o1yh1ZV+lDYTlMejHr25pcK3TnnPZLqrwn/RfKrlTTRenTFTzE1B8Oq2pnspH7jOD0WlN9BbCGuBCEzgWXGXyUu4fAzWPoYnMbwGcjnaOJ3Dziv244sDOvX5fbh8X5AjadncnOdnR4dA1y+C5Lc3WloqTospb7+nGd/t99CQ7CESGNtj8D2FxAPcCAgi3r+7Sx4K5QQXi80hLGQlQu/wcX0EesNrK37FU7CCW6N3e8+vJ+QYL+lWJZuyHCDQch75aDRHyqfbR/7gDGN8+ujER/F0XzcCMIgQNwMvrbpBrKMIthNBYgsnXUwN7peM/C4/tclKzDr6qIoBHUZP7Q== ansible@tts.lan"
-    echo -e "$key1\n$key2" > /mnt/home/ansible/.ssh/authorized_keys
+    echo -e "$key1\n$key2" >/mnt/home/ansible/.ssh/authorized_keys
     chmod 0600 /mnt/home/ansible/.ssh/authorized_keys
     arch_chroot "chown -R ansible:ansible /home/ansible/.ssh"
 
@@ -942,7 +934,7 @@ setup_ansible_account() {
 }
 
 setup_vagrant_account() {
-    if [[ "${ai_is_vagrant:-}" = 1 ]]; then
+    if [[ ${ai_is_vagrant:-} == 1 ]]; then
         print_info "Setting up Vagrant account"
 
         arch_chroot "useradd -m -s /bin/bash vagrant"
@@ -956,8 +948,8 @@ setup_vagrant_account() {
         arch_chroot "chown -R vagrant:vagrant /home/vagrant/.ssh"
 
         # Add vagrant user to passwordless sudo
-        echo 'Defaults:vagrant !requiretty' > /mnt/etc/sudoers.d/vagrant
-        echo 'vagrant ALL=(ALL) NOPASSWD: ALL' >> /mnt/etc/sudoers.d/vagrant
+        echo 'Defaults:vagrant !requiretty' >/mnt/etc/sudoers.d/vagrant
+        echo 'vagrant ALL=(ALL) NOPASSWD: ALL' >>/mnt/etc/sudoers.d/vagrant
         chmod 440 /mnt/etc/sudoers.d/vagrant
 
         # Add user to the ssh
@@ -1048,6 +1040,6 @@ setup_vagrant_account
 unmount_partitions
 wrap_up
 
-if [[ "${ai_is_vagrant:-}" = 1 ]]; then
+if [[ ${ai_is_vagrant:-} == 1 ]]; then
     systemctl reboot
 fi
