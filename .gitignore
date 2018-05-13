@@ -139,6 +139,8 @@ logs/
 
 # Ignore the private keys
 keys/
+!keys/id_ed25519_ansible.pub
+!keys/id_rsa_ansible.pub
 
 # ISO files for packer installations
 packer/iso/
