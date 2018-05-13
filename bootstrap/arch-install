@@ -852,7 +852,7 @@ configure_pacman() {
             echo -e "\n[$1]\nInclude = /etc/pacman.d/mirrorlist" >>/mnt/etc/pacman.conf
         else
             sed -i "${_has_repo}s/^#//" /mnt/etc/pacman.conf
-            local _has_repo=$((_has_repo + 1))
+            _has_repo=$((_has_repo + 1))
             sed -i "${_has_repo}s/^#//" /mnt/etc/pacman.conf
         fi
     }
