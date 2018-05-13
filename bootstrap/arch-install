@@ -872,21 +872,6 @@ configure_pacman() {
     fi
 }
 
-install_yaourt() {
-    print_info "Install Yaourt..."
-
-    # Setup archlinuxfr repository
-    local _has_fr
-    _has_fr=$(grep -n "\[archlinuxfr\]" /mnt/etc/pacman.conf | cut -f1 -d:)
-    if [[ -z $_has_fr ]]; then
-        echo -e "\n[archlinuxfr]\nSigLevel = Never\nServer = https://repo.archlinux.fr/\$arch" >>/mnt/etc/pacman.conf
-        echo -e '\nArchlinuxfr repository added into pacman.conf file'
-    fi
-
-    # Refresh
-    arch_chroot "pacman -Sy --noconfirm yaourt"
-}
-
 pull_repo() {
     print_info "Pulling repo"
     mkdir -p /mnt/srv/provision-arch
@@ -1030,7 +1015,6 @@ configure_bootloader
 
 configure_sudo
 configure_pacman
-install_yaourt
 
 copy_mirrorlist
 root_password
