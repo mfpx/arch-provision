@@ -728,6 +728,7 @@ install_base_system() {
 
     # Set the NetworkManager & ssh services to be enabled
     arch_chroot "systemctl enable NetworkManager.service"
+    arch_chroot "systemctl enable wpa_supplicant.service"
     arch_chroot "systemctl enable sshd.service"
 }
 
