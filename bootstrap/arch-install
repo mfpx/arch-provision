@@ -712,7 +712,7 @@ install_base_system() {
     fi
 
     # Install file system tools
-    pacstrap /mnt parted btrfs-progs f2fs-tools net-tools dosfstools mtools nfs-utils gptfdisk
+    pacstrap /mnt parted btrfs-progs f2fs-tools net-tools dosfstools exfat-utils mtools nfs-utils gptfdisk
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 4."
 
     # Install networking tools

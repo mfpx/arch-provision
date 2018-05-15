@@ -9,6 +9,7 @@ pacman_packages:
   - f2fs-tools
   - net-tools
   - dosfstools
+  - exfat-utils
   - mtools
   - nfs-utils
   - gptfdisk
@@ -26,4 +27,3 @@ pacman_packages:
   - ansible
   - terminus-font
   - breeze-grub
-  - yaourt
