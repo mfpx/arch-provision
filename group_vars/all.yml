@@ -1,10 +1,6 @@
 ---
 desired_time_zone: US/Central
 
-core_users:
-  - name: 'ansible'
-    comment: 'Ansible'
-
 default_groups:
   - users
 
@@ -27,12 +23,7 @@ sudo_users:
   - svcacct
 
 ssh_users:
-  - name: 'brennan'
-    public_rsa_key: 'keys/id_rsa_brennan.pub'
-    public_ed25519_key: 'keys/id_ed25519_brennan.pub'
-  - name: 'svcacct'
-    public_rsa_key: 'keys/id_rsa_svcacct.pub'
-    public_ed25519_key: 'keys/id_ed25519_svcacct.pub'
+  - brennan
 
 virtualbox_managers:
   - brennan

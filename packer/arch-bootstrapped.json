@@ -43,7 +43,11 @@
                 ["modifyvm", "{{.Name}}", "--mouse", "usb"],
                 ["modifyvm", "{{.Name}}", "--keyboard", "usb"],
                 ["modifyvm", "{{.Name}}", "--audiocontroller", "hda"],
-                ["modifyvm", "{{.Name}}", "--usbehci", "on"]
+                ["modifyvm", "{{.Name}}", "--audioout", "on"],
+                ["modifyvm", "{{.Name}}", "--audioin", "on"],
+                ["modifyvm", "{{.Name}}", "--usb", "on"],
+                ["modifyvm", "{{.Name}}", "--usbehci", "on"],
+                ["modifyvm", "{{.Name}}", "--usbxhci", "off"]
             ],
 
             "boot_command": [

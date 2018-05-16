@@ -33,23 +33,9 @@
 
 - name: Add users to the ssh group
   user:
-    name: '{{item.name}}'
+    name: '{{ item }}'
     groups: 'ssh'
     append: yes
-  with_items: '{{ ssh_users }}'
-
-- name: Add users authorized RSA SSH key
-  become: true
-  authorized_key:
-    user: '{{ item.name }}'
-    key: "{{ lookup('file', item.public_rsa_key) }}"
-  with_items: '{{ ssh_users }}'
-
-- name: Add users authorized ED25519 SSH key
-  become: true
-  authorized_key:
-    user: '{{ item.name }}'
-    key: "{{ lookup('file', item.public_ed25519_key) }}"
   with_items: '{{ ssh_users }}'
 
 - name: Allow svcacct user to run sudo without a password
@@ -60,3 +46,12 @@
     group: root
     mode: 0440
     backup: no
+
+- name: Add users to manage virtualbox
+  user:
+    name: '{{ item }}'
+    groups: 'vboxsf'
+    append: yes
+  with_items: '{{ virtualbox_managers }}'
+  when: ansible_virtualization_role == "guest" and ansible_virtualization_type == "virtualbox"
+

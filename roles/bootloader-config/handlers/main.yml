@@ -1,1 +1,7 @@
 ---
+- name: Rebuild mkinitcpio
+  command: mkinitcpio -P
+
+- name: Rebuild grub
+  command: grub-mkconfig -o /boot/grub/grub.cfg
+

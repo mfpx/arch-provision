@@ -6,7 +6,7 @@
   with_items: "{{ pacman_packages }}"
 
 - name: Install aur packages ({{ package_set }})
-  yaourt:
+  aurman:
     name: "{{ item }}"
     state: present
   with_items: "{{ aur_packages }}"

@@ -1,15 +1,4 @@
 ---
-- name: Setup pacman.conf
-  template:
-    src: etc--pacman.conf.j2
-    dest: /etc/pacman.conf
-    owner: root
-    group: root
-    mode: 0644
-    backup: yes
-  notify:
-    - refresh pacman mirrors
-
 - name: Create pacman hook directory
   file:
     name: /etc/pacman.d/hooks

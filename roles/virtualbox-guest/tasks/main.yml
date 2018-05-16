@@ -9,6 +9,38 @@
     name: 'vagrant'
     groups: 'vboxsf'
     append: yes
-  when: vbox_vagrant_user_exists.stdout == "1"
+  when: is_vagrant.stat.exists
 
+- name: Install Virtualbox Utils
+  pacman:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - virtualbox-guest-dkms
+    - virtualbox-guest-utils
+
+- name: Install drivers from AUR
+  become: false
+  aurman:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - aic94xx-firmware
+    - wd719x-firmware
+  notify: Rebuild mkinitcpio
+
+- name: Copy virtualbox.conf
+  copy:
+    src: etc-modules-load.d--virtualbox.conf
+    dest: /etc/modules-load.d/virtualbox.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: yes
+
+- name: Enable Virtualbox Service
+  service:
+    name: vboxservice.service
+    state: started
+    enabled: yes
 

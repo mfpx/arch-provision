@@ -23,5 +23,11 @@
   become: true
   authorized_key:
     user: 'ansible'
-    exclusive: yes
     key: "{{ lookup('file', 'keys/id_ed25519_ansible.pub') }}"
+
+- name: Add Ansible's authorized RSA SSH key
+  become: true
+  authorized_key:
+    user: 'ansible'
+    key: "{{ lookup('file', 'keys/id_rsa_ansible.pub') }}"
+

@@ -12,7 +12,7 @@
     - hostname
     - pacman-config
     - install-applications
-#    - bootloader-config
+    - bootloader-config
     - sudo
     - ansible-user
     - vagrant-user
@@ -21,10 +21,19 @@
     - locale
     - ssh
 
-#- name: Common setup
-#  hosts: all
-#  become: true
-#  roles:
+- name: Aurman
+  hosts: all
+  become: false
+  roles:
+    - aurman
+
+- name: Common setup
+  hosts: all
+  become: true
+  roles:
+    - { role: virtualbox-guest, when: ansible_virtualization_type == "virtualbox" and ansible_virtualization_role == "guest" }
+    - pacman
+    - setup-users
     # - systemd
     # - network
     # - security
@@ -32,6 +41,11 @@
     # - printer-install
     # - install-dev-frameworks
 
+# - name: X11 Desktop Setup
+#   hosts: all
+#   become: true
+#   roles:
+#     - desktop-environment
 # - name: X11 Desktop Setup
 #   hosts: all
 #   roles:

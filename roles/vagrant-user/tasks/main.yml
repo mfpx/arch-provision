@@ -10,7 +10,7 @@
     state: present
   when: is_vagrant.stat.exists
 
-- name: Create vagrant users
+- name: Create vagrant user
   user:
     name: 'vagrant'
     comment: 'Vagrant'

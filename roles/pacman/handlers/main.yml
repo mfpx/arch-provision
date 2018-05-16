@@ -1,8 +1,4 @@
 ---
-- name: refresh pacman mirrors
-  pacman:
-    update_cache: yes
-
 - name: restart paccache
   service:
     name: paccache.timer

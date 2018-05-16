@@ -1,0 +1,22 @@
+---
+- name: Check if aurman exists
+  stat:
+    path: /usr/bin/aurman
+  register: aurman_stat
+
+- name: Pull aurman AUR package
+  git:
+    repo: 'https://aur.archlinux.org/aurman.git'
+    dest: /home/vagrant/aurman
+  when: not aurman_stat.stat.exists
+
+- name: Build and install aurman
+  command: makepkg --noconfirm -si
+  args:
+    chdir: /home/vagrant/aurman
+  when: not aurman_stat.stat.exists
+
+- name: Install aurman from AUR using aurman (for updates)
+  command: aurman --noconfirm --noedit -S aurman
+  when: not aurman_stat.stat.exists
+

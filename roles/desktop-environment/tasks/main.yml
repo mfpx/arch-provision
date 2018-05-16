@@ -1,0 +1,15 @@
+---
+- name: Install xorg server
+  pacman:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - libglvnd
+    - xf86-video-fbdev
+    - xorg-server
+- name: Install pacman packages ({{ package_set }})
+  pacman:
+    name: "{{ item }}"
+    state: present
+    with_items: "{{ pacman_packages }}"
+
