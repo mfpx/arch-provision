@@ -2,15 +2,10 @@
 package_set: "Core Packages"
 pacman_packages:
   - base-devel
-  - parted
-  - btrfs-progs
-  - f2fs-tools
-  - net-tools
   - dosfstools
-  - exfat-utils
   - mtools
-  - nfs-utils
   - gptfdisk
+  - net-tools
   - dialog
   - networkmanager
   - networkmanager-openvpn
