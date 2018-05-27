@@ -680,18 +680,23 @@ install_base_system() {
     fi
 
     # Install kernel
-    pacstrap /mnt base base-devel linux-headers
-    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 1."
     case "$KERNEL_VERSION" in
         "lts")
-            pacstrap /mnt linux-lts linux-lts-headers
-            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 2."
+            pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux$/linux-lts/g | pacstrap "${MOUNTPOINT}" - linux-lts-headers
+            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
             ;;
         "hard")
-            pacstrap /mnt linux-hardened linux-hardened-headers
-            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 3."
+            pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux$/linux-hardened/g | pacstrap "${MOUNTPOINT}" - linux-hardened-headers
+            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+            ;;
+        *)
+            pacstrap /mnt base linux-headers
+            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
             ;;
     esac
+
+    pacstrap /mnt base-devel
+    [[ $? -ne 0 ]] && error_msg "Installing base-devel to /mnt failed. Check error messages above."
 
     if [[ $DISTRO == 'parabolaiso' ]]; then
         setup_repo() {
@@ -720,7 +725,7 @@ install_base_system() {
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 5."
 
     # Remaining misc tools
-    pacstrap /mnt reflector git vim openssh ansible terminus-font breeze-grub
+    pacstrap /mnt reflector git gvim openssh ansible terminus-font breeze-grub
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 6."
 
     # Add the ssh group
