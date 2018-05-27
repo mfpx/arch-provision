@@ -675,25 +675,41 @@ install_base_system() {
 
     if [[ $DISTRO == 'parabolaiso' ]]; then
         pacman -S --noconfirm parabola-keyring
+
+        # Install kernel
+        case "$KERNEL_VERSION" in
+            "lts")
+                pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux-libre$/linux-libre-lts/g | pacstrap /mnt - linux-libre-lts-headers
+                [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+                ;;
+            "hard")
+                pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux-libre$/linux-libre-hardened/g | pacstrap /mnt - linux-libre-hardened-headers
+                [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+                ;;
+            *)
+                pacstrap /mnt base linux-libre-headers
+                [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+                ;;
+        esac
     else
         pacman -S --noconfirm archlinux-keyring
-    fi
 
-    # Install kernel
-    case "$KERNEL_VERSION" in
-        "lts")
-            pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux$/linux-lts/g | pacstrap "${MOUNTPOINT}" - linux-lts-headers
-            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
-            ;;
-        "hard")
-            pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux$/linux-hardened/g | pacstrap "${MOUNTPOINT}" - linux-hardened-headers
-            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
-            ;;
-        *)
-            pacstrap /mnt base linux-headers
-            [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
-            ;;
-    esac
+        # Install kernel
+        case "$KERNEL_VERSION" in
+            "lts")
+                pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux$/linux-lts/g | pacstrap /mnt - linux-lts-headers
+                [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+                ;;
+            "hard")
+                pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux$/linux-hardened/g | pacstrap /mnt - linux-hardened-headers
+                [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+                ;;
+            *)
+                pacstrap /mnt base linux-headers
+                [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+                ;;
+        esac
+    fi
 
     pacstrap /mnt base-devel
     [[ $? -ne 0 ]] && error_msg "Installing base-devel to /mnt failed. Check error messages above."
