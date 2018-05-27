@@ -4,7 +4,7 @@ from ansible.module_utils.basic import *
 
 
 def package_installed(module, package_name):
-    cmd = ['aurman', '-Q', package_name]
+    cmd = ['pacman', '-Q', package_name]
     exit_code, _, _ = module.run_command(cmd, check_rc=False)
     return exit_code == 0
 

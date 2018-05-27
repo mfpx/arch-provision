@@ -73,17 +73,16 @@
     - arc-kde
     - papirus-icon-theme
 
-# AUR installs don't seem to be working
-# - name: Install Theme Assets (AUR)
-#   become: false
-#   aurman:
-#     name: "{{ item }}"
-#     state: present
-#   with_items:
-#     - numix-icon-theme-git
-#     - numix-folders-git
-#     - numix-circle-icon-theme-git
-#     - numix-square-icon-theme-git
-#     - capitaine-cursors
-#     - capitaine-cursors-hidpi
+- name: Install Theme Assets (AUR)
+  become: false
+  aurman:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - numix-icon-theme-git
+    - numix-folders-git
+    - numix-circle-icon-theme-git
+    - numix-square-icon-theme-git
+    - capitaine-cursors
+    - capitaine-cursors-hidpi
 
