@@ -1,9 +1,7 @@
 ---
 package_set: "Core Packages"
 pacman_packages:
-  - base
   - base-devel
-  - linux-headers
   - parted
   - btrfs-progs
   - f2fs-tools
@@ -22,7 +20,7 @@ pacman_packages:
   - wpa_supplicant
   - reflector
   - git
-  - vim
+  - gvim
   - openssh
   - ansible
   - terminus-font

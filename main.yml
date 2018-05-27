@@ -3,11 +3,11 @@
 # The exception is the SSH role.  It can potentially lock you out of a machine
 # by a misconfigured SSH config so it is run here.  If it causes issuse in this
 # main script it can be removed.
-- name: Core setup (bootstrap)
+- name: Bootstrap setup
   hosts: all
   become: true
   vars_files:
-    - vars/core.yml
+    - vars/bootstrap.yml
   roles:
     - hostname
     - pacman-config
@@ -27,7 +27,7 @@
   roles:
     - aurman
 
-- name: Common setup
+- name: Common setup & core tools
   hosts: all
   become: true
   roles:
@@ -41,11 +41,11 @@
     # - printer-install
     # - install-dev-frameworks
 
-# - name: X11 Desktop Setup
-#   hosts: all
-#   become: true
-#   roles:
-#     - desktop-environment
+- name: X11 Desktop Setup
+  hosts: all
+  become: true
+  roles:
+    - desktop-environment
 # - name: X11 Desktop Setup
 #   hosts: all
 #   roles:
