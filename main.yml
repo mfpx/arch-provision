@@ -27,13 +27,14 @@
   roles:
     - aurman
 
-- name: Common setup & core tools
+- name: Common setup
   hosts: all
   become: true
   roles:
     - { role: virtualbox-guest, when: ansible_virtualization_type == "virtualbox" and ansible_virtualization_role == "guest" }
     - pacman
     - setup-users
+    #- video-drivers
     # - systemd
     # - network
     # - security
@@ -41,17 +42,27 @@
     # - printer-install
     # - install-dev-frameworks
 
+# - name: Console Tools
+#   hosts: all
+#   become: true
+#   vars_files:
+#     - vars/console-tools.yml
+#   roles:
+#     - install-applications
+
 - name: X11 Desktop Setup
   hosts: all
   become: true
   roles:
     - desktop-environment
-# - name: X11 Desktop Setup
+
+# - name: Desktop Applications
 #   hosts: all
+#   become: true
+#   vars_files:
+#     - vars/desktop-apps.yml
 #   roles:
-#     - desktop-kde
-#     - desktop-addon-i3
-#     - { role: virtualbox-guest, when: ansible_virtualization_type == "virtualbox" and ansible_virtualization_role == "guest" }
+#     - install-applications
 
 # - name: Install Fonts
 #   hosts: all

@@ -11,6 +11,8 @@
     - xorg-xkill
     - xorg-server-xwayland
     - xorg-xinit
+    - xorg-xrandr
+    - xterm
 
 - name: Install KDE
   pacman:
@@ -19,24 +21,13 @@
   with_items:
     - phonon-qt5-gstreamer
     - libx264
-    - plasma
-    - kf5
+    - plasma-meta
     - plasma-wayland-session
-    - ark
-    - dolphin
+    - kdebase-meta
+    - kdeutils-meta
     - dolphin-plugins
-    - kate
-    - kcalc
-    - konsole
-    - kwalletmanager
-
-- name: Install SDDM
-  pacman:
-    name: "{{ item }}"
-    state: present
-  with_items:
-    - sddm
-    - sddm-kcm
+    - kde-gtk-config
+    - systemd-kcm
 
 - name: Enable SDDM
   service:
@@ -72,6 +63,10 @@
     - arc-gtk-theme
     - arc-kde
     - papirus-icon-theme
+    - kvantum-theme-arc
+    - arc-icon-theme
+    - gnome-themes-standard
+    - gnome-icon-theme
 
 - name: Install Theme Assets (AUR)
   become: false
@@ -80,7 +75,7 @@
     state: present
   with_items:
     - numix-icon-theme-git
-    - numix-folders-git
+    #- numix-folders-git # not working
     - numix-circle-icon-theme-git
     - numix-square-icon-theme-git
     - capitaine-cursors
