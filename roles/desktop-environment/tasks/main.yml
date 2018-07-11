@@ -32,7 +32,7 @@
 - name: Enable SDDM
   service:
     name: sddm.service
-    enabled: yes
+    enabled: true
 
 - name: Set SDDM config
   template:
@@ -41,7 +41,7 @@
     owner: root
     group: root
     mode: 0644
-    backup: yes
+    backup: true
 
 - name: Install i3
   pacman:
@@ -75,9 +75,8 @@
     state: present
   with_items:
     - numix-icon-theme-git
-    #- numix-folders-git # not working
+    # - numix-folders-git # not working
     - numix-circle-icon-theme-git
     - numix-square-icon-theme-git
     - capitaine-cursors
     - capitaine-cursors-hidpi
-

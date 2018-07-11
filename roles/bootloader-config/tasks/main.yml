@@ -6,7 +6,7 @@
     owner: root
     group: root
     mode: 0644
-    backup: yes
+    backup: true
   notify: Rebuild mkinitcpio
 
 - name: Copy default grub config
@@ -16,7 +16,7 @@
     owner: root
     group: root
     mode: 0644
-    backup: yes
+    backup: true
   when: ansible_virtualization_role == "host"
   notify: Rebuild grub
 
@@ -27,7 +27,7 @@
     owner: root
     group: root
     mode: 0644
-    backup: yes
-  when: ansible_virtualization_type == "virtualbox" and ansible_virtualization_role == "guest"
+    backup: true
+  when: ansible_virtualization_type == "virtualbox"
+    and ansible_virtualization_role == "guest"
   notify: Rebuild grub
-

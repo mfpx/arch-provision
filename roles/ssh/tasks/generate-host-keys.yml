@@ -54,7 +54,7 @@
     dest: /etc/ssh/ssh_host_keys_regenerated
     line: "Host keys regenerated."
     state: present
-    create: yes
+    create: true
     owner: root
     group: root
     mode: 0644

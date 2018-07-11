@@ -36,5 +36,5 @@
 - name: Enable and start pacman cache cleanup timer
   service:
     name: paccache.timer
-    enabled: yes
+    enabled: true
     state: started

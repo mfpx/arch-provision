@@ -11,13 +11,13 @@
     group: 'ansible'
     shell: '/bin/bash'
     password: '$6$gHPAdPhFI.Y7G$0psnjnKNqEOEVy5JV5Zp7cnx9UYsa.q7AcwKU7ZZ0qtnl5QVq0FpgzdaN5lIzK5MQimHnLbps1JhcP3jAcIku1'
-    createhome: yes
+    createhome: true
 
 - name: Add ansible to the default groups
   user:
     name: 'ansible'
     groups: 'users,wheel,ssh'
-    append: yes
+    append: true
 
 - name: Add Ansible's authorized ED25519 SSH key
   become: true
@@ -30,4 +30,3 @@
   authorized_key:
     user: 'ansible'
     key: "{{ lookup('file', 'keys/id_rsa_ansible.pub') }}"
-

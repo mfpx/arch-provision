@@ -1,0 +1,20 @@
+---
+- name: Determine Number Of Video Cards
+  shell: lspci | grep VGA | wc -l
+  register: vidCount
+  changed_when: false
+
+- name: Determine Video Card Manufacturer
+  shell: lspci | grep VGA | tr "[:upper:]" "[:lower:]"
+  regiser: vidCard
+  changed_when: false
+
+- include: dual-video.yml
+  when: vidCount.stdout != "1"
+
+- include: nvidia-video.yml
+  when: vidCount.stdout == "1" && output.stdout.find("nvidia") != -1
+
+- include: intel-video.yml
+  when: vidCount.stdout == "1" && output.stdout.find("intel corporation") != -1
+

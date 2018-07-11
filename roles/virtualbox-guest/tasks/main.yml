@@ -8,7 +8,7 @@
   user:
     name: 'vagrant'
     groups: 'vboxsf'
-    append: yes
+    append: true
   when: is_vagrant.stat.exists
 
 - name: Install Virtualbox Utils
@@ -36,11 +36,10 @@
     owner: root
     group: root
     mode: 0644
-    backup: yes
+    backup: true
 
 - name: Enable Virtualbox Service
   service:
     name: vboxservice.service
     state: started
-    enabled: yes
-
+    enabled: true

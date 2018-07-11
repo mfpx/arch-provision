@@ -18,7 +18,7 @@
     owner: root
     group: root
     mode: 0644
-    backup: yes
+    backup: true
 
 - name: Copy sshd_config
   template:
@@ -27,11 +27,11 @@
     owner: root
     group: root
     mode: 0644
-    backup: yes
+    backup: true
   notify: Restart ssh
 
 - name: Start and enable the ssh service
   service:
     name: sshd.service
     state: started
-    enabled: yes
+    enabled: true

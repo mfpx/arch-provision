@@ -12,14 +12,14 @@
     group: '{{ item.name }}'
     shell: '{{ item.shell }}'
     password: '{{ item.password }}'
-    createhome: yes
+    createhome: true
   with_items: '{{ users }}'
 
 - name: Add users to the default groups
   user:
     name: '{{ item[0].name }}'
     groups: '{{ item[1] }}'
-    append: yes
+    append: true
   with_nested:
     - '{{ users }}'
     - '{{ default_groups }}'
@@ -28,14 +28,14 @@
   user:
     name: '{{ item }}'
     groups: 'wheel'
-    append: yes
+    append: true
   with_items: '{{ sudo_users }}'
 
 - name: Add users to the ssh group
   user:
     name: '{{ item }}'
     groups: 'ssh'
-    append: yes
+    append: true
   with_items: '{{ ssh_users }}'
 
 - name: Allow svcacct user to run sudo without a password
@@ -45,13 +45,13 @@
     owner: root
     group: root
     mode: 0440
-    backup: no
+    backup: false
 
 - name: Add users to manage virtualbox
   user:
     name: '{{ item }}'
     groups: 'vboxsf'
-    append: yes
+    append: true
   with_items: '{{ virtualbox_managers }}'
-  when: ansible_virtualization_role == "guest" and ansible_virtualization_type == "virtualbox"
-
+  when: ansible_virtualization_role == "guest"
+    and ansible_virtualization_type == "virtualbox"

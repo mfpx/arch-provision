@@ -31,10 +31,12 @@
   hosts: all
   become: true
   roles:
-    - { role: virtualbox-guest, when: ansible_virtualization_type == "virtualbox" and ansible_virtualization_role == "guest" }
+    - role: virtualbox-guest
+      when: ansible_virtualization_type == "virtualbox"
+            and ansible_virtualization_role == "guest"
     - pacman
     - setup-users
-    #- video-drivers
+    # - video-drivers
     # - systemd
     # - network
     # - security
@@ -88,7 +90,8 @@
 #   vars_files:
 #     - vars/vm-applications.yml
 #   roles:
-#     - { role: install-applications, when: ansible_virtualization_role != "guest" }
+#     - role: install-applications
+#       when: ansible_virtualization_role != "guest"
 
 # - name: Development Applications
 #   hosts: desktop_workstations:laptop_workstations:gaming_workstations

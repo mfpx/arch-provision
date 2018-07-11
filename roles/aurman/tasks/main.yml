@@ -19,4 +19,3 @@
 - name: Install aurman from AUR using aurman (for updates)
   command: aurman --noconfirm --noedit -S aurman
   when: not aurman_stat.stat.exists
-

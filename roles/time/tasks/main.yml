@@ -10,10 +10,10 @@
     owner: root
     group: root
     mode: 0644
-    backup: yes
+    backup: true
 
 - name: Start and enable the time sync service
   service:
     name: systemd-timesyncd.service
     state: started
-    enabled: yes
+    enabled: true

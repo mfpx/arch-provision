@@ -2,4 +2,3 @@
 - name: Set the hostname
   hostname: name={{ hostname }}
   when: hostname is defined
-

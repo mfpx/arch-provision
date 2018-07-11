@@ -17,14 +17,14 @@
     group: 'vagrant'
     shell: '/bin/bash'
     password: 'vagrant'
-    createhome: yes
+    createhome: true
   when: is_vagrant.stat.exists
 
 - name: Add vagrant to the default groups
   user:
     name: 'vagrant'
     groups: 'users,ssh'
-    append: yes
+    append: true
   when: is_vagrant.stat.exists
 
 - name: Setup vagrant sudo configuration
@@ -34,5 +34,5 @@
     owner: root
     group: root
     mode: 0440
-    backup: no
+    backup: false
   when: is_vagrant.stat.exists
