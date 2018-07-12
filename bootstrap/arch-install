@@ -479,11 +479,7 @@ configure_mirrorlist() {
 
   print_status "    Rotating the new list into place..."
   # Run reflector
-  if [[ $DISTRO == 'parabolaiso' ]]; then
-    /usr/bin/reflector --score 100 --number 20 --age 12 --sort rate --protocol https --save /etc/pacman.d/mirrorlist
-  else
-    /usr/bin/reflector --score 100 --number 20 --age 12 --sort rate --protocol https --country 'United States' --country 'Canada' --save /etc/pacman.d/mirrorlist
-  fi
+  /usr/bin/reflector --score 100 --fastest 20 --age 12 --sort rate --protocol https --save /etc/pacman.d/mirrorlist
 
   # Allow global read access (required for non-root yaourt execution)
   chmod +r /etc/pacman.d/mirrorlist
