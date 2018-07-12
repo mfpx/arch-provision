@@ -7,8 +7,8 @@
       "name": "arch-bootstrapped",
       "type": "virtualbox-iso",
       "guest_os_type": "ArchLinux_64",
-      "iso_url": "https://mirrors.kernel.org/archlinux/iso/{{ user `iso_version` }}/archlinux-{{ user `iso_version` }}-x86_64.iso",
-      "iso_checksum_url": "https://mirrors.kernel.org/archlinux/iso/{{ user `iso_version` }}/sha1sums.txt",
+      "iso_url": "https://mirrors.edge.kernel.org/archlinux/iso/{{ user `iso_version` }}/archlinux-{{ user `iso_version` }}-x86_64.iso",
+      "iso_checksum_url": "https://mirrors.edge.kernel.org/archlinux/iso/{{ user `iso_version` }}/sha1sums.txt",
       "iso_checksum_type": "sha1",
 
       "headless": "true",

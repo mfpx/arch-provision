@@ -1,4 +1,9 @@
 ---
+- name: Install pacman-contrib
+  pacman:
+    name: "pacman-contrib"
+    state: present
+
 - name: Create pacman hook directory
   file:
     name: /etc/pacman.d/hooks
