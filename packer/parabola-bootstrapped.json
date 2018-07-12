@@ -1,15 +1,14 @@
 {
   "variables": {
-    "iso_folder": "2017.10.17",
-    "iso_version": "2017.10.18-00.07-alpha"
+    "iso_version": "2018.06.02"
   },
   "builders": [
     {
       "name": "parabola-bootstrapped",
       "type": "virtualbox-iso",
       "guest_os_type": "ArchLinux_64",
-      "iso_url": "https://repo.parabola.nu/iso-beta/systemd-cli-{{ user `iso_folder` }}/parabola-systemd-cli-x86_64-netinstall-{{ user `iso_version` }}.iso",
-      "iso_checksum_url": "https://repo.parabola.nu/iso-beta/systemd-cli-{{ user `iso_folder` }}/SHA512SUMS",
+      "iso_url": "https://repo.parabola.nu/iso/systemd-cli-{{ user `iso_version` }}/parabola-systemd-cli-x86_64-netinstall-{{ user `iso_version` }}.iso",
+      "iso_checksum_url": "https://repo.parabola.nu/iso/systemd-cli-{{ user `iso_version` }}/SHA512SUMS",
       "iso_checksum_type": "sha512",
 
       "headless": "true",

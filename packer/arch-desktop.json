@@ -1,6 +1,6 @@
 {
   "variables": {
-    "iso_version": "2018.03.01"
+    "iso_version": "2018.07.01"
   },
   "builders": [
     {
@@ -32,6 +32,9 @@
       "vboxmanage": [
         ["modifyvm", "{{.Name}}", "--memory", "4096"],
         ["modifyvm", "{{.Name}}", "--cpus", "2"],
+        ["modifyvm", "{{.Name}}", "--pae", "on"],
+        ["modifyvm", "{{.Name}}", "--acpi", "on"],
+        ["modifyvm", "{{.Name}}", "--ioapic", "on"],
         ["modifyvm", "{{.Name}}", "--vram", "128"],
         ["modifyvm", "{{.Name}}", "--accelerate3d", "on"],
         ["modifyvm", "{{.Name}}", "--clipboard", "bidirectional"],
@@ -40,18 +43,17 @@
         ["modifyvm", "{{.Name}}", "--mouse", "usb"],
         ["modifyvm", "{{.Name}}", "--keyboard", "usb"],
         ["modifyvm", "{{.Name}}", "--audiocontroller", "hda"],
-        ["modifyvm", "{{.Name}}", "--usbehci", "on"]
+        ["modifyvm", "{{.Name}}", "--audioout", "on"],
+        ["modifyvm", "{{.Name}}", "--audioin", "on"],
+        ["modifyvm", "{{.Name}}", "--usb", "on"],
+        ["modifyvm", "{{.Name}}", "--usbehci", "on"],
+        ["modifyvm", "{{.Name}}", "--usbxhci", "off"]
       ],
 
       "boot_command": [
-        "<enter><wait30>",
+        "<enter><wait10><wait10>",
         "/usr/bin/curl -O http://{{ .HTTPIP }}:{{ .HTTPPort }}/arch-install<enter><wait10>",
-        "export ai_host_name=\"packer-$((1 + RANDOM % 1000))\"<enter>",
-        "export ai_main_disk='/dev/sda'<enter>",
-        "export ai_second_disk=''<enter>",
-        "export ai_kernel_version='lts'<enter>",
-        "export ai_root_pwd_hash='$6$X7CNILR8u4OcP$B1PGIar28anDJKiuoBdrgCSkR98KE7uaVd3/wBBVQZuczsnP6ha6v1Nntc6imhwG2mATNvRT1X/aykb3ZETqa.'<enter>",
-        "export ai_ansible_pwd_hash='$6$fn95dtCnNmwsG$7IzYjdq7tuhW6kFda0/3vN9nAci/./zMgdGHjE6RWSBI1ceJY00PWFrLy2AMUEO0C6crxBjNHD/BBff5jacNQ1'<enter>",
+        "export ai_automatic_install=1<enter>",
         "export ai_is_vagrant=1<enter>",
         "/usr/bin/bash ./arch-install<enter>"
       ]
