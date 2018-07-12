@@ -46,7 +46,7 @@
         ["modifyvm", "{{.Name}}", "--audioout", "on"],
         ["modifyvm", "{{.Name}}", "--audioin", "on"],
         ["modifyvm", "{{.Name}}", "--usb", "on"],
-        ["modifyvm", "{{.Name}}", "--usbehci", "on"],
+        ["modifyvm", "{{.Name}}", "--usbehci", "off"],
         ["modifyvm", "{{.Name}}", "--usbxhci", "off"]
       ],
 

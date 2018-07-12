@@ -19,7 +19,7 @@
       "ssh_password": "vagrant",
       "ssh_timeout": "45m",
 
-      "boot_wait": "15s",
+      "boot_wait": "45s",
 
       "shutdown_command": "sudo systemctl poweroff",
       "post_shutdown_delay": "2m",
@@ -46,12 +46,12 @@
         ["modifyvm", "{{.Name}}", "--audioout", "on"],
         ["modifyvm", "{{.Name}}", "--audioin", "on"],
         ["modifyvm", "{{.Name}}", "--usb", "on"],
-        ["modifyvm", "{{.Name}}", "--usbehci", "on"],
+        ["modifyvm", "{{.Name}}", "--usbehci", "off"],
         ["modifyvm", "{{.Name}}", "--usbxhci", "off"]
       ],
 
       "boot_command": [
-        "<enter><wait10><wait10>",
+        "<wait10><enter><wait10><enter><wait10>",
         "/usr/bin/curl -O http://{{ .HTTPIP }}:{{ .HTTPPort }}/arch-install<enter><wait10>",
         "export ai_automatic_install=1<enter>",
         "export ai_is_vagrant=1<enter>",
