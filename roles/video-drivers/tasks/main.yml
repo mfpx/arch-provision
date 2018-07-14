@@ -6,15 +6,16 @@
 
 - name: Determine Video Card Manufacturer
   shell: lspci | grep VGA | tr "[:upper:]" "[:lower:]"
-  regiser: vidCard
+  register: vidCard
   changed_when: false
 
-- include: dual-video.yml
+  # For now, I only install the Intel drivers in single card mode
+- include: intel-video.yml
   when: vidCount.stdout != "1"
 
-- include: nvidia-video.yml
-  when: vidCount.stdout == "1" && output.stdout.find("nvidia") != -1
+- include: nvidia-video-nouveau.yml
+  when: vidCount.stdout == "1" and vidCard.stdout.find("nvidia") != -1
 
 - include: intel-video.yml
-  when: vidCount.stdout == "1" && output.stdout.find("intel corporation") != -1
-
+  when: vidCount.stdout == "1"
+    and vidCard.stdout.find("intel corporation") != -1

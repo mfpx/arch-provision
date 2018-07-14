@@ -27,7 +27,6 @@
     - kdeutils-meta
     - dolphin-plugins
     - kde-gtk-config
-    - systemd-kcm
 
 - name: Enable SDDM
   service:
@@ -67,6 +66,14 @@
     - arc-icon-theme
     - gnome-themes-standard
     - gnome-icon-theme
+
+- name: Install AUR KCM's
+  become: false
+  aurman:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - systemd-kcm
 
 - name: Install Theme Assets (AUR)
   become: false

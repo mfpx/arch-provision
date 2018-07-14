@@ -11,11 +11,11 @@
   when: not aurman_stat.stat.exists
 
 - name: Build and install aurman
-  command: makepkg --noconfirm -si
+  command: makepkg --noconfirm -si --skippgpcheck
   args:
     chdir: /home/vagrant/aurman
   when: not aurman_stat.stat.exists
 
 - name: Install aurman from AUR using aurman (for updates)
-  command: aurman --noconfirm --noedit -S aurman
+  command: aurman --noconfirm --noedit --pgp_fetch -S aurman
   when: not aurman_stat.stat.exists
