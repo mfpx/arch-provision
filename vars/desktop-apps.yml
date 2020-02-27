@@ -1,0 +1,9 @@
+---
+package_set: "Desktop/GUI Applications"
+pacman_packages:
+  - kompare
+  - meld
+aur_packages:
+  - bcompare
+  - bcompare-kde5
+  - google-chrome

@@ -44,13 +44,13 @@
     # - printer-install
     # - install-dev-frameworks
 
-# - name: Console Tools
-#   hosts: all
-#   become: true
-#   vars_files:
-#     - vars/console-tools.yml
-#   roles:
-#     - install-applications
+- name: Console Tools
+  hosts: all
+  become: true
+  vars_files:
+    - vars/console-tools.yml
+  roles:
+    - install-applications
 
 - name: X11 Desktop Setup
   hosts: all
@@ -58,13 +58,13 @@
   roles:
     - desktop-environment
 
-# - name: Desktop Applications
-#   hosts: all
-#   become: true
-#   vars_files:
-#     - vars/desktop-apps.yml
-#   roles:
-#     - install-applications
+- name: Desktop Applications
+  hosts: all
+  become: true
+  vars_files:
+    - vars/desktop-apps.yml
+  roles:
+    - install-applications
 
 # - name: Install Fonts
 #   hosts: all
@@ -74,30 +74,11 @@
 #     - install-nerdfonts
 #     - install-fonts
 
-# - name: Desktop Workstation Applications
-#   hosts: all
-#   vars:
-#     package_set: "Shared Applications"
-#   vars_files:
-#     - vars/shared-applications.yml
-#   roles:
-#     - install-applications
-
-# - name: VM Applications
-#   hosts: desktop_workstations:laptop_workstations:gaming_workstations
-#   vars:
-#     package_set: "VM Applications"
-#   vars_files:
-#     - vars/vm-applications.yml
-#   roles:
-#     - role: install-applications
-#       when: ansible_virtualization_role != "guest"
-
-# - name: Development Applications
-#   hosts: desktop_workstations:laptop_workstations:gaming_workstations
-#   vars:
-#     package_set: "VM Applications"
-#   vars_files:
-#     - vars/vm-applications.yml
-#   roles:
-#     - install-applications
+- name: VM Applications
+  hosts: all
+  become: true
+  vars_files:
+    - vars/vm-applications.yml
+  roles:
+    - role: install-applications
+      when: ansible_virtualization_role != "guest"

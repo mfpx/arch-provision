@@ -1,0 +1,13 @@
+---
+package_set: "VM Applications"
+pacman_packages:
+  - qemu
+  - virt-manager
+  - virt-viewer
+  - virtualbox
+  - virtualbox-host-dkms
+  - vagrant
+  - docker
+  - docker-compose
+aur_packages:
+  - vagrant-libvirt
