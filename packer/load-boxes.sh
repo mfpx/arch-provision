@@ -12,12 +12,14 @@ fi
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 for box in $SCRIPT_DIR/boxes/*.box; do
-  local boxName="${i%.*}"
+  boxFile=${box##*/}
+  boxName="${boxFile%.*}"
+
   if [[ $(vagrant box list | grep -i "$boxName") ]]; then
     echo -e "\e[93mRemoving old box - ${boxName}\e[0m"
     vagrant box remove "$boxName"
   fi
 
   echo -e "\e[93mAdding box - ${boxName}\e[0m"
-  vagrant box add "$box" --name "$boxName"
+  vagrant box add "${box}" --name "${boxName}"
 done
