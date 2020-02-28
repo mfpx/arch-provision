@@ -11,8 +11,9 @@ indent_style = space
 indent_size = 2
 insert_final_newline = false
 trim_trailing_whitespace = true
-# Not all editors support this
-max_line_length = 100
+# Not all editors support this.  Why 88?  See the documentation for Python's
+# Black formatter
+max_line_length = 88
 
 # Python PEP8, PHP (PSR-2), Perl, Rust
 [*.{py,py3,php,pl,pm,t,PL,rs}]
@@ -27,7 +28,7 @@ indent_size = 4
 indent_size = tab
 indent_style = tab
 
-# Microsoft languages & PowerShell
+# Microsoft languages
 [*.{cs,csx,vb,vbx}]
 indent_size = 4
 
@@ -35,8 +36,12 @@ indent_size = 4
 [*.{ps1,psd1,psm1,pssc}]
 indent_size = 4
 
+# Command & Batch
+[*.{cmd,bat}]
+end_of_line = crlf
+indent_size = 4
+
 # Makefiles
 [{Makefile,*.mk,Makefile.*}]
 indent_size = tab
 indent_style = tab
-
