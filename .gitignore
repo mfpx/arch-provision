@@ -185,4 +185,4 @@ keys/
 !keys/id_rsa_ansible.pub
 
 # ISO files for packer installations
-output-virtualbox-iso/
+output-*/
