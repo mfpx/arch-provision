@@ -5,31 +5,31 @@
 # URL to install: bash <(curl -fsSL https://git.io/vNDOZ)
 #
 # Bash "strict" mode, -o pipefail removed
-set -eu
-IFS=$'\n\t'
+SOURCED=false && [ "${0}" = "${BASH_SOURCE[0]}" ] || SOURCED=true
+if ! $SOURCED; then
+  set -eEu
+  shopt -s extdebug
+  trap 's=$?; echo "$0: Error on line "$LINENO": $BASH_COMMAND"; exit $s' ERR
+  IFS=$'\n\t'
+fi
 
 # Text modifiers
-Bold=$(tput bold)
-Reset=$(tput sgr0)
+Bold="\033[1m"
+Reset="\033[0m"
 
 # Colors
-Red=$(tput setaf 1)
-Green=$(tput setaf 2)
-Yellow=$(tput setaf 3)
-
-# Bold Colors
-BRed=${Bold}${Red}
-BGreen=${Bold}${Green}
-BYellow=${Bold}${Yellow}
+Red="\033[31m"
+Green="\033[32m"
+Yellow="\033[33m"
 
 # Paths
 WORKING_DIR=$(pwd)
-LOG="{$WORKING_DIR/$(basename "${0}").log"
-[[ -f $LOG ]] && rm -f "$LOG"
+LOG="${WORKING_DIR}/arch-install.log"
+[[ -f ${LOG} ]] && rm -f "${LOG}"
+echo "Start log..." >>"${LOG}"
 
 # Flags and variables
 SYS_ARCH=$(uname -m) # Architecture (x86_64)
-DISTRO=$(uname -n)
 UEFI=0
 XPINGS=0 # CONNECTION CHECK
 KEYMAP="us"
@@ -46,49 +46,49 @@ ANSIBLE_PWD=""
 ### Common Helper Functions
 
 print_line() {
-  printf "%$(tput cols)s\n" | tr ' ' '-'
+  printf "%$(tput cols)s\n" | tr ' ' '-' |& tee -a "${LOG}"
 }
 
 blank_line() {
-  echo -e "\n"
+  echo -e "\n" |& tee -a "${LOG}"
 }
 
 print_title() {
   clear
   print_line
-  echo -e "# ${Bold}$1${Reset}"
+  echo -e "# ${Bold}$1${Reset}" |& tee -a "${LOG}"
   print_line
-  echo ""
+  echo "" |& tee -a "${LOG}"
 }
 
 print_title_info() {
   T_COLS=$(tput cols)
-  echo -e "${Bold}$1${Reset}\n" | fold -sw $((T_COLS - 18)) | sed 's/^/\t/'
+  echo -e "${Bold}$1${Reset}\n" | fold -sw $((T_COLS - 18)) | sed 's/^/\t/' |& tee -a "${LOG}"
 }
 
 print_status() {
   T_COLS=$(tput cols)
-  echo -e "$1${Reset}" | fold -sw $((T_COLS - 1))
+  echo -e "$1${Reset}" | fold -sw $((T_COLS - 1)) |& tee -a "${LOG}"
 }
 
 print_info() {
   T_COLS=$(tput cols)
-  echo -e "${Bold}$1${Reset}" | fold -sw $((T_COLS - 1))
+  echo -e "${Bold}$1${Reset}" | fold -sw $((T_COLS - 1)) |& tee -a "${LOG}"
 }
 
 print_warning() {
   T_COLS=$(tput cols)
-  echo -e "${BYellow}$1${Reset}" | fold -sw $((T_COLS - 1))
+  echo -e "${Yellow}$1${Reset}" | fold -sw $((T_COLS - 1)) |& tee -a "${LOG}"
 }
 
 print_success() {
   T_COLS=$(tput cols)
-  echo -e "${BGreen}$1${Reset}" | fold -sw $((T_COLS - 1))
+  echo -e "${Green}$1${Reset}" | fold -sw $((T_COLS - 1)) |& tee -a "${LOG}"
 }
 
 error_msg() {
   T_COLS=$(tput cols)
-  echo -e "${BRed}$1${Reset}\n" | fold -sw $((T_COLS - 1))
+  echo -e "${Red}$1${Reset}\n" | fold -sw $((T_COLS - 1)) |& tee -a "${LOG}"
   exit 1
 }
 
@@ -122,15 +122,15 @@ print_summary() {
   print_status "The hostname selected is $HOST_NAME"
 
   case "$KERNEL_VERSION" in
-    "lts")
-      print_status "The LTS kernel will be installed."
-      ;;
-    "hard")
-      print_status "The hardened kernel will be installed."
-      ;;
-    *)
-      print_status "The default kernel will be installed."
-      ;;
+  "lts")
+    print_status "The LTS kernel will be installed."
+    ;;
+  "hard")
+    print_status "The hardened kernel will be installed."
+    ;;
+  *)
+    print_status "The default kernel will be installed."
+    ;;
   esac
 
   blank_line
@@ -147,7 +147,7 @@ print_summary() {
 }
 
 arch_chroot() {
-  arch-chroot /mnt /bin/bash -c "${1}"
+  arch-chroot /mnt /bin/bash -c "${1}" |& tee -a "${LOG}"
 }
 
 is_package_installed() {
@@ -208,31 +208,31 @@ check_connection() {
     # shellcheck disable=SC2034
     select CONNECTION_TYPE in "${_connection_opts[@]}"; do
       case "$REPLY" in
-        1)
-          systemctl start "dhcpcd@${WIRED_DEV}.service"
-          break
-          ;;
-        2)
-          systemctl stop "dhcpcd@${WIRED_DEV}.service"
-          read -rp "IP Address: " IP_ADDR
-          read -rp "Submask: " SUBMASK
-          read -rp "Gateway: " GATEWAY
-          ip link set "${WIRED_DEV}" up
-          ip addr add "${IP_ADDR}/${SUBMASK}" dev "${WIRED_DEV}"
-          ip route add default via "${GATEWAY}"
-          break
-          ;;
-        3)
-          wifi-menu "${WIRELESS_DEV}"
-          break
-          ;;
-        4)
-          error_msg "No network setup, exiting."
-          break
-          ;;
-        *)
-          invalid_option
-          ;;
+      1)
+        systemctl start "dhcpcd@${WIRED_DEV}.service"
+        break
+        ;;
+      2)
+        systemctl stop "dhcpcd@${WIRED_DEV}.service"
+        read -rp "IP Address: " IP_ADDR
+        read -rp "Submask: " SUBMASK
+        read -rp "Gateway: " GATEWAY
+        ip link set "${WIRED_DEV}" up
+        ip addr add "${IP_ADDR}/${SUBMASK}" dev "${WIRED_DEV}"
+        ip route add default via "${GATEWAY}"
+        break
+        ;;
+      3)
+        wifi-menu "${WIRELESS_DEV}"
+        break
+        ;;
+      4)
+        error_msg "No network setup, exiting."
+        break
+        ;;
+      *)
+        invalid_option
+        ;;
       esac
     done
     if [[ $XPINGS -gt 2 ]]; then
@@ -252,12 +252,7 @@ ask_for_hostname() {
   fi
 
   if [[ ${ai_automatic_install:-} == 1 ]]; then
-    if [[ $DISTRO == 'parabolaiso' ]]; then
-      HOST_NAME="parabola-$((1 + RANDOM % 1000))"
-    else
-      HOST_NAME="arch-$((1 + RANDOM % 1000))"
-    fi
-
+    HOST_NAME="arch-$((1 + RANDOM % 1000))"
     return
   fi
 
@@ -265,11 +260,7 @@ ask_for_hostname() {
   print_title_info "Pick a hostname for this machine.  Press enter to have a random hostname selected."
   read -rp "Hostname [ex: archlinux]: " HOST_NAME
   if [[ $HOST_NAME == "" ]]; then
-    if [[ $DISTRO == 'parabolaiso' ]]; then
-      HOST_NAME="parabola-$((1 + RANDOM % 1000))"
-    else
-      HOST_NAME="arch-$((1 + RANDOM % 1000))"
-    fi
+    HOST_NAME="arch-$((1 + RANDOM % 1000))"
   fi
 }
 
@@ -468,74 +459,24 @@ ask_for_ansible_password() {
 configure_mirrorlist() {
   print_info "Configuring repository mirrorlist"
 
-  pacman -Syy
+  pacman -Syy |& tee -a "${LOG}"
 
   # Install reflector
-  pacman -S --noconfirm reflector
+  pacman -S --noconfirm reflector |& tee -a "${LOG}"
 
   print_status "    Backing up the original mirrorlist..."
-  rm -f "/etc/pacman.d/mirrorlist.orig"
-  mv -i "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.orig"
+  rm -f "/etc/pacman.d/mirrorlist.orig" |& tee -a "${LOG}"
+  mv -i "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.orig" |& tee -a "${LOG}"
 
   print_status "    Rotating the new list into place..."
   # Run reflector
-  /usr/bin/reflector --score 100 --fastest 20 --age 12 --sort rate --protocol https --save /etc/pacman.d/mirrorlist
+  /usr/bin/reflector --score 100 --fastest 20 --age 12 --sort rate --protocol https --save /etc/pacman.d/mirrorlist |& tee -a "${LOG}"
 
   # Allow global read access (required for non-root yaourt execution)
-  chmod +r /etc/pacman.d/mirrorlist
+  chmod +r /etc/pacman.d/mirrorlist |& tee -a "${LOG}"
 
   # Update one more time
-  pacman -Syy
-}
-
-configure_mirrorlist_old() {
-  print_info "Configuring repository mirrorlist"
-
-  pacman -Syy
-
-  tmpfile=$(mktemp --suffix=-mirrorlist)
-
-  if [[ $DISTRO == 'parabolaiso' ]]; then
-    # shellcheck disable=SC2016
-    echo 'Server = https://mirror.fsf.org/$repo/os/$arch' >"${tmpfile}"
-    # shellcheck disable=SC2016,SC2129
-    echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >>"${tmpfile}"
-    # shellcheck disable=SC2016
-    echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >>"${tmpfile}"
-    # shellcheck disable=SC2016
-    echo 'Server = https://redirector.parabola.nu/$repo/os/$arch' >>"${tmpfile}"
-    # shellcheck disable=SC2016
-    echo 'Server = https://parabola.serverpit.com/$repo/os/$arch' >>"${tmpfile}"
-  else
-    url="https://www.archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on"
-
-    # Get latest mirror list and save to tmpfile
-    curl -fsSL -o "${tmpfile}" "${url}"
-    sed -i 's/^#Server/Server/g' "${tmpfile}"
-  fi
-
-  # Backup and replace current mirrorlist file (if new file is non-zero)
-  if [[ -s ${tmpfile} ]]; then
-    print_status "    Backing up the original mirrorlist..."
-    rm -f "/etc/pacman.d/mirrorlist.orig"
-    mv -i "/etc/pacman.d/mirrorlist" "/etc/pacman.d/mirrorlist.orig"
-
-    print_status "    Rotating the new list into place..."
-    mv -i "${tmpfile}" "/etc/pacman.d/mirrorlist"
-  else
-    print_warning "    Unable to update, could not download list."
-  fi
-
-  # Rank the mirrors
-  cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.tmp
-  rankmirrors /etc/pacman.d/mirrorlist.tmp >/etc/pacman.d/mirrorlist
-  rm /etc/pacman.d/mirrorlist.tmp
-
-  # Allow global read access (required for non-root yaourt execution)
-  chmod +r /etc/pacman.d/mirrorlist
-
-  # Update one more time
-  pacman -Syy
+  pacman -Syy |& tee -a "${LOG}"
 }
 
 unmount_partitions() {
@@ -652,13 +593,6 @@ mount_partitions() {
     mount -t vfat -o defaults,rw,relatime,utf8,errors=remount-ro "${MAIN_DISK}1" "/mnt/boot/efi"
   fi
 
-  # Swap file
-  total_memory=$(grep MemTotal /proc/meminfo | awk '{print ($2/1024)*1.5}' | sed 's/\..*//')
-  fallocate -l "${total_memory}M" /mnt/swapfile
-  chmod 600 /mnt/swapfile
-  mkswap /mnt/swapfile
-  swapon /mnt/swapfile
-
   # Mount others
   mount -t ext4 -o defaults,rw,relatime /dev/mapper/vg_main-lv_var /mnt/var
   if [[ $DUAL_DISK == 0 ]]; then
@@ -673,75 +607,34 @@ mount_partitions() {
 install_base_system() {
   print_info "Installing base system"
 
-  if [[ $DISTRO == 'parabolaiso' ]]; then
-    pacman -S --noconfirm parabola-keyring
+  pacman -S --noconfirm archlinux-keyring |& tee -a "${LOG}"
 
-    # Install kernel
-    case "$KERNEL_VERSION" in
-      "lts")
-        pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux-libre$/linux-libre-lts/g | pacstrap /mnt - linux-libre-lts-headers
-        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
-        ;;
-      "hard")
-        pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux-libre$/linux-libre-hardened/g | pacstrap /mnt - linux-libre-hardened-headers
-        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
-        ;;
-      *)
-        pacstrap /mnt base linux-libre-headers
-        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
-        ;;
-    esac
-  else
-    pacman -S --noconfirm archlinux-keyring
-
-    # Install kernel
-    case "$KERNEL_VERSION" in
-      "lts")
-        pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux$/linux-lts/g | pacstrap /mnt - linux-lts-headers
-        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
-        ;;
-      "hard")
-        pacman -Sg base | cut -d ' ' -f 2 | sed s/^linux$/linux-hardened/g | pacstrap /mnt - linux-hardened-headers
-        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
-        ;;
-      *)
-        pacstrap /mnt base linux-headers
-        [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
-        ;;
-    esac
-  fi
-
-  pacstrap /mnt base-devel
-  [[ $? -ne 0 ]] && error_msg "Installing base-devel to /mnt failed. Check error messages above."
-
-  if [[ $DISTRO == 'parabolaiso' ]]; then
-    setup_repo() {
-      local _has_repo
-      _has_repo=$(grep -n "\[$1\]" /etc/pacman.conf | cut -f1 -d:)
-      if [[ -z $_has_repo ]]; then
-        echo -e "\n[$1]\nInclude = /etc/pacman.d/mirrorlist" >>/etc/pacman.conf
-      else
-        sed -i "${_has_repo}s/^#//" /etc/pacman.conf
-        local _has_repo=$((_has_repo + 1))
-        sed -i "${_has_repo}s/^#//" /etc/pacman.conf
-      fi
-    }
-
-    setup_repo "nonprism"
-    pacman -Sy
-    pacstrap /mnt your-privacy
-  fi
+  # Install kernel
+  case "$KERNEL_VERSION" in
+  "lts")
+    pacstrap /mnt base base-devel linux-lts linux-lts-headers linux-firmware |& tee -a "${LOG}"
+    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+    ;;
+  "hard")
+    pacstrap /mnt base base-devel linux-hardened linux-hardened-headers linux-firmware |& tee -a "${LOG}"
+    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+    ;;
+  *)
+    pacstrap /mnt base base-devel linux linux-headers linux-firmware |& tee -a "${LOG}"
+    [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above."
+    ;;
+  esac
 
   # Install file system tools
-  pacstrap /mnt dosfstools mtools gptfdisk
+  pacstrap /mnt lvm2 dosfstools mtools gptfdisk |& tee -a "${LOG}"
   [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 4."
 
   # Install networking tools
-  pacstrap /mnt net-tools dialog networkmanager networkmanager-openvpn iw wireless_tools wpa_actiond wpa_supplicant
+  pacstrap /mnt net-tools dialog networkmanager networkmanager-openvpn iw wireless_tools wpa_supplicant |& tee -a "${LOG}"
   [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 5."
 
   # Remaining misc tools
-  pacstrap /mnt reflector git gvim openssh ansible terminus-font breeze-grub
+  pacstrap /mnt reflector git gvim openssh ansible terminus-font breeze-grub systemd-swap |& tee -a "${LOG}"
   [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 6."
 
   # Add the ssh group
@@ -751,6 +644,22 @@ install_base_system() {
   arch_chroot "systemctl enable NetworkManager.service"
   arch_chroot "systemctl enable wpa_supplicant.service"
   arch_chroot "systemctl enable sshd.service"
+}
+
+install_virtualization() {
+  if [[ $(systemd-detect-virt) == "oracle" ]]; then
+    # In virtualbox
+    print_info "Installing VirtualBox Additions"
+
+    pacstrap /mnt virtualbox-guest-utils virtualbox-guest-dkms |& tee -a "${LOG}"
+    [[ $? -ne 0 ]] && error_msg "Installing virtualization to /mnt failed. Check error messages above."
+
+    arch_chroot "systemctl enable vboxservice.service"
+
+    print_info "Writing statup.nsh"
+    echo "FS0:" >/mnt/boot/efi/startup.nsh
+    echo "\EFI\grub\grubx64.efi" >>/mnt/boot/efi/startup.nsh
+  fi
 }
 
 configure_keymap() {
@@ -763,7 +672,6 @@ configure_fstab() {
   print_info "Write fstab"
 
   genfstab -U -p /mnt >/mnt/etc/fstab
-  [[ -f /mnt/swapfile ]] && sed -i 's/\/mnt//' /mnt/etc/fstab
 }
 
 configure_hostname() {
@@ -802,28 +710,36 @@ configure_locale() {
 configure_mkinitcpio() {
   print_info "Configuring mkinitcpio"
 
-  sed -i '/^HOOKS/c\HOOKS=(systemd keyboard autodetect modconf block sd-vconsole sd-encrypt sd-lvm2 filesystems fsck)' /mnt/etc/mkinitcpio.conf
+  sed -i '/^HOOKS/c\HOOKS=(systemd keyboard autodetect modconf block sd-vconsole sd-encrypt sd-lvm2 filesystems fsck)' /mnt/etc/mkinitcpio.conf |& tee -a "${LOG}"
 
   # Setup compression
-  sed -i 's/#COMPRESSION="lz4"/COMPRESSION="lz4"/' /mnt/etc/mkinitcpio.conf
-  sed -i '/^#COMPRESSION_OPTIONS/c\COMPRESSION_OPTIONS=(-3)' /mnt/etc/mkinitcpio.conf
+  sed -i 's/#COMPRESSION="lz4"/COMPRESSION="lz4"/' /mnt/etc/mkinitcpio.conf |& tee -a "${LOG}"
+  sed -i '/^#COMPRESSION_OPTIONS/c\COMPRESSION_OPTIONS=(-3)' /mnt/etc/mkinitcpio.conf |& tee -a "${LOG}"
 
   arch_chroot "mkinitcpio -P"
+}
+
+configure_systemd_swap() {
+  print_info "Configuring systemd-swap"
+
+  arch_chroot "systemctl enable systemd-swap.service"
+
+  arch_chroot 'echo -e "zswap_enabled=1\nzram_enabled=0\nswapfc_enabled=1" > /etc/systemd/swap.conf.d/myswap.conf'
 }
 
 install_bootloader() {
   print_info "Install bootloader"
 
   if [[ $UEFI == 1 ]]; then
-    pacstrap /mnt grub os-prober
+    pacstrap /mnt grub os-prober |& tee -a "${LOG}"
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 7."
   else
-    pacstrap /mnt grub-bios os-prober
+    pacstrap /mnt grub-bios os-prober |& tee -a "${LOG}"
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 8."
   fi
 
   if [[ $UEFI == 1 ]]; then
-    pacstrap /mnt efibootmgr
+    pacstrap /mnt efibootmgr |& tee -a "${LOG}"
   fi
 }
 
@@ -835,23 +751,22 @@ configure_bootloader() {
   else
     arch_chroot "grub-install --target=i386-pc --recheck --debug /dev/sda"
   fi
-  cp /mnt/usr/share/locale/en\@quot/LC_MESSAGES/grub.mo /mnt/boot/grub/locale/en.mo
 
   # Update grub config
-  sed -i '/^GRUB_TIMEOUT/c\GRUB_TIMEOUT=8' /mnt/etc/default/grub
+  sed -i '/^GRUB_TIMEOUT/c\GRUB_TIMEOUT=8' /mnt/etc/default/grub |& tee -a "${LOG}"
   # shellcheck disable=SC2016
-  sed -i '/^GRUB_DISTRIBUTOR/c\GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Arch`' /mnt/etc/default/grub
+  sed -i '/^GRUB_DISTRIBUTOR/c\GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Arch`' /mnt/etc/default/grub |& tee -a "${LOG}"
 
   if [[ $(systemd-detect-virt) == "oracle" ]]; then
-    sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT/c\GRUB_CMDLINE_LINUX_DEFAULT="quiet splash video=1024x768"' /mnt/etc/default/grub
+    sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT/c\GRUB_CMDLINE_LINUX_DEFAULT="quiet splash video=1024x768"' /mnt/etc/default/grub |& tee -a "${LOG}"
   else
-    sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT/c\GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"' /mnt/etc/default/grub
+    sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT/c\GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"' /mnt/etc/default/grub |& tee -a "${LOG}"
   fi
 
-  sed -i '/^GRUB_GFXMODE/c\GRUB_GFXMODE=1024x768x32,1024x768x24,1024x768,auto' /mnt/etc/default/grub
-  sed -i '/^GRUB_DISABLE_RECOVERY/c\#GRUB_DISABLE_RECOVERY=true' /mnt/etc/default/grub
-  sed -i '/^GRUB_THEME/c\GRUB_THEME="/usr/share/grub/themes/breeze/theme.txt"' /mnt/etc/default/grub
-  sed -i '/^#GRUB_INIT_TUNE/c\GRUB_INIT_TUNE="480 440 1"' /mnt/etc/default/grub
+  sed -i '/^GRUB_GFXMODE/c\GRUB_GFXMODE=1024x768x32,1024x768x24,1024x768,auto' /mnt/etc/default/grub |& tee -a "${LOG}"
+  sed -i '/^GRUB_DISABLE_RECOVERY/c\#GRUB_DISABLE_RECOVERY=true' /mnt/etc/default/grub |& tee -a "${LOG}"
+  sed -i '/^GRUB_THEME/c\GRUB_THEME="/usr/share/grub/themes/breeze/theme.txt"' /mnt/etc/default/grub |& tee -a "${LOG}"
+  sed -i '/^#GRUB_INIT_TUNE/c\GRUB_INIT_TUNE="480 440 1"' /mnt/etc/default/grub |& tee -a "${LOG}"
 
   # Make the config
   arch_chroot "grub-mkconfig -o /boot/grub/grub.cfg"
@@ -884,13 +799,7 @@ configure_pacman() {
     setup_repo "multilib"
     echo -e '\nMultilib repository added into pacman.conf file'
 
-    if [[ $DISTRO == 'parabolaiso' ]]; then
-      setup_repo "nonprism"
-      #            setup_repo "nonprism-multilib"
-      setup_repo "libre-multilib"
-      setup_repo "pcr-multilib"
-      echo -e '\nParabola repositories added into pacman.conf file'
-    fi
+    arch_chroot "pacman -Sy"
   fi
 }
 
@@ -935,9 +844,10 @@ setup_ansible_account() {
   # Add user to the ssh
   arch_chroot "usermod -a -G ssh ansible"
 
-  # Stamp the build
-  mkdir -p /mnt/srv/provision-stamps
-  date --iso-8601=seconds | sudo tee /mnt/srv/provision-stamps/box_build_time
+  if [[ $(systemd-detect-virt) == "oracle" ]]; then
+    # In virtualbox, add the user to the vboxsf group
+    arch_chroot "usermod -a -G vboxsf ansible"
+  fi
 }
 
 setup_vagrant_account() {
@@ -962,9 +872,22 @@ setup_vagrant_account() {
     # Add user to the ssh
     arch_chroot "usermod -a -G ssh vagrant"
 
+    if [[ $(systemd-detect-virt) == "oracle" ]]; then
+      # In virtualbox, add the user to the vboxsf group
+      arch_chroot "usermod -a -G vboxsf vagrant"
+    fi
+
     # Stamp the vagrant build
     date --iso-8601=seconds | sudo tee /mnt/etc/vagrant_box_build_time
   fi
+}
+
+stamp_build() {
+  print_info "Stamping build"
+  # Stamp the build
+  mkdir -p /mnt/srv/provision-stamps
+  date --iso-8601=seconds | sudo tee /mnt/srv/provision-stamps/box_build_time
+  cp "${LOG}" /mnt/srv/provision-stamps/arch-install.log
 }
 
 copy_mirrorlist() {
@@ -990,11 +913,10 @@ wrap_up() {
 }
 
 ### Main flow
-
 loadkeys "$KEYMAP" # load the keymap
 
 print_title "https://github.com/brennanfee/provision-arch"
-print_title_info "Provision Arch -> Automated script to install a base Arch system."
+print_title_info "Provision Arch -> Automated script to install my Arch systems."
 print_line
 print_status "Script can be cancelled at any time with CTRL+C"
 pause_function
@@ -1024,6 +946,7 @@ format_partitions
 mount_partitions
 
 install_base_system
+install_virtualization
 configure_keymap
 configure_fstab
 configure_hostname
@@ -1031,18 +954,21 @@ configure_timezone
 configure_clock
 configure_locale
 configure_mkinitcpio
+configure_systemd_swap
 
 install_bootloader
 configure_bootloader
 
 configure_sudo
+copy_mirrorlist
 configure_pacman
 
-copy_mirrorlist
 root_password
 setup_ansible_account
 pull_repo
 setup_vagrant_account
+stamp_build
+
 unmount_partitions
 wrap_up
 
