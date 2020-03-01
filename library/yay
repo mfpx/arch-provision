@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 from ansible.module_utils.basic import *
 
@@ -16,7 +16,7 @@ def install_packages(module, package_name):
             msg='package already installed',
         )
 
-    cmd = ['yaourt', '--noconfirm', '-S', package_name]
+    cmd = ['yay', '--noconfirm', '--noeditmenu', '--needed', '-S', package_name]
     module.run_command(cmd, check_rc=True)
 
     module.exit_json(

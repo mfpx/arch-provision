@@ -1,7 +1,7 @@
 ---
 # This first part just replicates what was done in the base install script
 # The exception is the SSH role.  It can potentially lock you out of a machine
-# by a misconfigured SSH config so it is run here.  If it causes issuse in this
+# by a misconfigured SSH config so it is run here.  If it causes issues in this
 # main script it can be removed.
 - name: Bootstrap setup
   hosts: all
@@ -21,11 +21,11 @@
     - locale
     - ssh
 
-- name: Aurman
+- name: Yay
   hosts: all
   become: false
   roles:
-    - aurman
+    - yay
 
 - name: Common setup
   hosts: all
@@ -33,7 +33,7 @@
   roles:
     - role: virtualbox-guest
       when: ansible_virtualization_type == "virtualbox"
-            and ansible_virtualization_role == "guest"
+        and ansible_virtualization_role == "guest"
     - pacman
     - setup-users
     - video-drivers
