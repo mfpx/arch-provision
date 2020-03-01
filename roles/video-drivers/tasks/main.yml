@@ -9,13 +9,30 @@
   register: vidCard
   changed_when: false
 
-  # For now, I only install the Intel drivers in single card mode
-- include: intel-video.yml
-  when: vidCount.stdout != "1"
+# For now, I install these on every machine
+- name: Primary video drivers
+  pacman:
+    name:
+      - xf86-video-intel
+      - xf86-video-amdgpu
+      - mesa
+      - vulkan-intel
+      - vulkan-radeon
+      - libva-mesa-driver
+      - libva-intel-driver
+      - libva-utils
+      - mesa-vdpau
+      - libva-vdpau-driver
+      - libvdpau-va-gl
+      - vdpauinfo
+    state: present
 
-- include: nvidia-video-nouveau.yml
-  when: vidCount.stdout == "1" and vidCard.stdout.find("nvidia") != -1
-
-- include: intel-video.yml
-  when: vidCount.stdout == "1"
-    and vidCard.stdout.find("intel corporation") != -1
+# Only install the NVIDIA stuff if needed
+- name: Install NVidia (Nouveau) Drivers
+  pacman:
+    name:
+      - xf86-video-nouveau
+    state: present
+  when: vidCount.stdout == "1" and vidCard.stdout.find("NVIDIA") != -1
+#TODO: Build out a laptop one that uses PRIME for both the NVIDIA (proprietary) and
+# Intel graphics drivers at the same time.  Only on machines with both graphics cards.

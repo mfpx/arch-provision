@@ -35,6 +35,9 @@
     - role: virtualbox-guest
       when: ansible_virtualization_type == "virtualbox"
         and ansible_virtualization_role == "guest"
+    - pacman
+    - setup-users
+    - video-drivers
 # - name: Common setup
 #   hosts: all
 #   become: true

@@ -1,7 +1,0 @@
----
-- name: Install NVidia (Native) Drivers
-  pacman:
-    name: "{{ item }}"
-    state: present
-    with_items:
-      - TBD
