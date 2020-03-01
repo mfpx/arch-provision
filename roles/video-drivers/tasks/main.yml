@@ -15,6 +15,7 @@
     name:
       - xf86-video-intel
       - xf86-video-amdgpu
+      - xf86-video-nouveau
       - mesa
       - vulkan-intel
       - vulkan-radeon
@@ -25,14 +26,9 @@
       - libva-vdpau-driver
       - libvdpau-va-gl
       - vdpauinfo
+      - libxss
+      - vulkan-mesa-layer
+      - intel-media-driver
     state: present
-
-# Only install the NVIDIA stuff if needed
-- name: Install NVidia (Nouveau) Drivers
-  pacman:
-    name:
-      - xf86-video-nouveau
-    state: present
-  when: vidCount.stdout == "1" and vidCard.stdout.find("NVIDIA") != -1
 #TODO: Build out a laptop one that uses PRIME for both the NVIDIA (proprietary) and
 # Intel graphics drivers at the same time.  Only on machines with both graphics cards.
