@@ -11,7 +11,7 @@
       "iso_checksum_url": "https://mirrors.edge.kernel.org/archlinux/iso/{{ user `iso_version` }}/sha1sums.txt",
       "iso_checksum_type": "sha1",
 
-      "headless": "true",
+      "headless": "false",
 
       "http_directory": "../bootstrap",
 
