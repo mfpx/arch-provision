@@ -17,7 +17,7 @@
     group: "vagrant"
     shell: "/bin/bash"
     password: "$6$mWO3JS7TFi$peysHDpUwddyf7.9GrkPwpoq7gM3RoLQdkCxd3dn5LN2dl/9vR09CbwG5zOQrIK6SzgzBMmmqoSaNWDJhLTzV1"
-    createhome: true
+    create_home: true
   when: is_vagrant.stat.exists
 
 - name: Add vagrant to the default groups

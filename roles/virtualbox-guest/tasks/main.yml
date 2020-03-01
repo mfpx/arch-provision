@@ -1,27 +1,32 @@
 ---
 - name: Checking for vagrant...
   stat:
-    path: '/etc/vagrant_box_build_time'
+    path: "/etc/vagrant_box_build_time"
   register: is_vagrant
 
-- name: Add vagrant user to the VirtualBox group
+- name: Add Vagrant user to the VirtualBox group
   user:
-    name: 'vagrant'
-    groups: 'vboxsf'
+    name: "vagrant"
+    groups: "vboxsf"
     append: true
   when: is_vagrant.stat.exists
 
+- name: Add Ansible user to the VirtualBox group
+  user:
+    name: "ansible"
+    groups: "vboxsf"
+    append: true
+
 - name: Install Virtualbox Utils
   pacman:
-    name: "{{ item }}"
+    name:
+      - virtualbox-guest-utils
+      - virtualbox-guest-dkms
     state: present
-  with_items:
-    - virtualbox-guest-dkms
-    - virtualbox-guest-utils
 
 - name: Install drivers from AUR
   become: false
-  aurman:
+  yay:
     name: "{{ item }}"
     state: present
   with_items:
@@ -29,14 +34,14 @@
     - wd719x-firmware
   notify: Rebuild mkinitcpio
 
-- name: Copy virtualbox.conf
+- name: Copy startup.nsh
   copy:
-    src: etc-modules-load.d--virtualbox.conf
-    dest: /etc/modules-load.d/virtualbox.conf
+    src: boot-efi--startup.nsh
+    dest: /boot/efi/startup.nsh
     owner: root
     group: root
-    mode: 0644
-    backup: true
+    mode: 0755
+    backup: false
 
 - name: Enable Virtualbox Service
   service:

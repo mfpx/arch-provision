@@ -26,13 +26,19 @@
   become: false
   roles:
     - yay
+
+- name: Common setup
+  hosts: all
+  become: true
+  roles:
+    # This role should be up in bootstrap, however it requires yay
+    - role: virtualbox-guest
+      when: ansible_virtualization_type == "virtualbox"
+        and ansible_virtualization_role == "guest"
 # - name: Common setup
 #   hosts: all
 #   become: true
 #   roles:
-#     - role: virtualbox-guest
-#       when: ansible_virtualization_type == "virtualbox"
-#         and ansible_virtualization_role == "guest"
 #     - pacman
 #     - setup-users
 #     - video-drivers

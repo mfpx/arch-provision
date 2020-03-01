@@ -1,32 +1,32 @@
 ---
-- name: Add ansible primary group
+- name: Add Ansible primary group
   group:
-    name: 'ansible'
+    name: "ansible"
     state: present
 
-- name: Create ansible users
+- name: Create Ansible users
   user:
-    name: 'ansible'
-    comment: 'Ansible'
-    group: 'ansible'
-    shell: '/bin/bash'
-    password: '$6$gHPAdPhFI.Y7G$0psnjnKNqEOEVy5JV5Zp7cnx9UYsa.q7AcwKU7ZZ0qtnl5QVq0FpgzdaN5lIzK5MQimHnLbps1JhcP3jAcIku1'
-    createhome: true
+    name: "ansible"
+    comment: "Ansible"
+    group: "ansible"
+    shell: "/bin/bash"
+    password: "$6$gHPAdPhFI.Y7G$0psnjnKNqEOEVy5JV5Zp7cnx9UYsa.q7AcwKU7ZZ0qtnl5QVq0FpgzdaN5lIzK5MQimHnLbps1JhcP3jAcIku1"
+    create_home: true
 
-- name: Add ansible to the default groups
+- name: Add Ansible to the default groups
   user:
-    name: 'ansible'
-    groups: 'users,wheel,ssh'
+    name: "ansible"
+    groups: "users,wheel,ssh"
     append: true
 
 - name: Add Ansible's authorized ED25519 SSH key
   become: true
   authorized_key:
-    user: 'ansible'
+    user: "ansible"
     key: "{{ lookup('file', 'keys/id_ed25519_ansible.pub') }}"
 
 - name: Add Ansible's authorized RSA SSH key
   become: true
   authorized_key:
-    user: 'ansible'
+    user: "ansible"
     key: "{{ lookup('file', 'keys/id_rsa_ansible.pub') }}"
