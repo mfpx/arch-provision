@@ -724,7 +724,7 @@ configure_systemd_swap() {
 
   arch_chroot "systemctl enable systemd-swap.service"
 
-  arch_chroot 'echo -e "zswap_enabled=1\nzram_enabled=0\nswapfc_enabled=1" > /etc/systemd/swap.conf.d/myswap.conf'
+  arch_chroot 'echo -e "zswap_enabled=1\nzram_enabled=0\nswapfc_enabled=1" > /etc/systemd/swap.conf.d/swap-config.conf'
 }
 
 install_bootloader() {
