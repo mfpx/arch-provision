@@ -1,10 +1,10 @@
 {
   "variables": {
-    "iso_version": "2018.07.01"
+    "iso_version": "2020.02.01"
   },
   "builders": [
     {
-      "name": "arch-bootstrapped",
+      "name": "arch-desktop",
       "type": "virtualbox-iso",
       "guest_os_type": "ArchLinux_64",
       "iso_url": "https://mirrors.edge.kernel.org/archlinux/iso/{{ user `iso_version` }}/archlinux-{{ user `iso_version` }}-x86_64.iso",
@@ -19,9 +19,9 @@
       "ssh_password": "vagrant",
       "ssh_timeout": "45m",
 
-      "boot_wait": "15s",
+      "boot_wait": "20s",
 
-      "shutdown_command": "sudo systemctl poweroff",
+      "shutdown_command": "sudo -S systemctl poweroff",
       "post_shutdown_delay": "2m",
 
       "hard_drive_interface": "sata",
@@ -30,14 +30,21 @@
       "guest_additions_mode": "disable",
 
       "vboxmanage": [
-        ["modifyvm", "{{.Name}}", "--memory", "4096"],
+        ["modifyvm", "{{.Name}}", "--ostype", "ArchLinux_64"],
+        ["modifyvm", "{{.Name}}", "--memory", "8192"],
+        ["modifyvm", "{{.Name}}", "--firmware", "efi"],
         ["modifyvm", "{{.Name}}", "--cpus", "2"],
         ["modifyvm", "{{.Name}}", "--pae", "on"],
         ["modifyvm", "{{.Name}}", "--acpi", "on"],
         ["modifyvm", "{{.Name}}", "--ioapic", "on"],
+        ["modifyvm", "{{.Name}}", "--hwvirtex", "on"],
+        ["modifyvm", "{{.Name}}", "--nestedpaging", "on"],
+        ["modifyvm", "{{.Name}}", "--nested-hw-virt", "on"],
         ["modifyvm", "{{.Name}}", "--vram", "128"],
-        ["modifyvm", "{{.Name}}", "--accelerate3d", "on"],
-        ["modifyvm", "{{.Name}}", "--clipboard", "bidirectional"],
+        ["modifyvm", "{{.Name}}", "--graphicscontroller", "vboxsvga"],
+        ["modifyvm", "{{.Name}}", "--accelerate3d", "off"],
+        ["modifyvm", "{{.Name}}", "--monitorcount", "1"],
+        ["modifyvm", "{{.Name}}", "--clipboard-mode", "bidirectional"],
         ["modifyvm", "{{.Name}}", "--draganddrop", "bidirectional"],
         ["modifyvm", "{{.Name}}", "--rtcuseutc", "on"],
         ["modifyvm", "{{.Name}}", "--mouse", "usb"],
@@ -45,9 +52,10 @@
         ["modifyvm", "{{.Name}}", "--audiocontroller", "hda"],
         ["modifyvm", "{{.Name}}", "--audioout", "on"],
         ["modifyvm", "{{.Name}}", "--audioin", "on"],
+        ["modifyvm", "{{.Name}}", "--audio", "pulse"],
         ["modifyvm", "{{.Name}}", "--usb", "on"],
-        ["modifyvm", "{{.Name}}", "--usbehci", "off"],
-        ["modifyvm", "{{.Name}}", "--usbxhci", "off"]
+        ["modifyvm", "{{.Name}}", "--usbehci", "on"],
+        ["modifyvm", "{{.Name}}", "--usbxhci", "on"]
       ],
 
       "boot_command": [
@@ -61,41 +69,19 @@
   ],
   "provisioners": [
     {
-      "type": "shell",
-      "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "scripts": [
-        "scripts/install-virtualbox.sh"
-      ]
-    },
-    {
-      "type": "shell",
-      "expect_disconnect": true,
-      "inline": [
-        "sudo systemctl reboot"
-      ]
-    },
-    {
       "type": "ansible",
-      "pause_before": "20s",
       "playbook_file": "../main.yml",
-      "user": "vagrant",
-      "groups": [ "desktop_workstations" ]
+      "user": "vagrant"
     },
     {
       "type": "shell",
       "expect_disconnect": true,
-      "inline": [
-        "sudo systemctl reboot"
-      ]
+      "inline": ["sudo systemctl reboot"]
     },
     {
       "type": "shell",
-      "pause_before": "20s",
       "execute_command": "{{.Vars}} sudo -S -E bash '{{.Path}}'",
-      "scripts": [
-        "scripts/cleanup.sh",
-        "scripts/minimize.sh"
-      ]
+      "scripts": ["scripts/cleanup.sh", "scripts/minimize.sh"]
     }
   ],
   "post-processors": [
