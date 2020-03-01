@@ -1,29 +1,29 @@
 ---
 - name: Checking for vagrant...
   stat:
-    path: '/etc/vagrant_box_build_time'
+    path: "/etc/vagrant_box_build_time"
   register: is_vagrant
 
 - name: Add vagrant primary group
   group:
-    name: 'vagrant'
+    name: "vagrant"
     state: present
   when: is_vagrant.stat.exists
 
 - name: Create vagrant user
   user:
-    name: 'vagrant'
-    comment: 'Vagrant'
-    group: 'vagrant'
-    shell: '/bin/bash'
-    password: 'vagrant'
+    name: "vagrant"
+    comment: "Vagrant"
+    group: "vagrant"
+    shell: "/bin/bash"
+    password: "$6$mWO3JS7TFi$peysHDpUwddyf7.9GrkPwpoq7gM3RoLQdkCxd3dn5LN2dl/9vR09CbwG5zOQrIK6SzgzBMmmqoSaNWDJhLTzV1"
     createhome: true
   when: is_vagrant.stat.exists
 
 - name: Add vagrant to the default groups
   user:
-    name: 'vagrant'
-    groups: 'users,ssh'
+    name: "vagrant"
+    groups: "users,ssh"
     append: true
   when: is_vagrant.stat.exists
 

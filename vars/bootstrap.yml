@@ -1,7 +1,10 @@
 ---
 package_set: "Core Packages"
 pacman_packages:
+  - base
   - base-devel
+  - linux-firmware
+  - lvm2
   - dosfstools
   - mtools
   - gptfdisk
@@ -11,7 +14,6 @@ pacman_packages:
   - networkmanager-openvpn
   - iw
   - wireless_tools
-  - wpa_actiond
   - wpa_supplicant
   - reflector
   - git
@@ -20,3 +22,4 @@ pacman_packages:
   - ansible
   - terminus-font
   - breeze-grub
+  - systemd-swap

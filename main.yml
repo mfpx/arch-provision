@@ -26,59 +26,58 @@
   become: false
   roles:
     - yay
-
-- name: Common setup
-  hosts: all
-  become: true
-  roles:
-    - role: virtualbox-guest
-      when: ansible_virtualization_type == "virtualbox"
-        and ansible_virtualization_role == "guest"
-    - pacman
-    - setup-users
-    - video-drivers
-    # - systemd
-    # - network
-    # - security
-    # - audio ??
-    # - printer-install
-    # - install-dev-frameworks
-
-- name: Console Tools
-  hosts: all
-  become: true
-  vars_files:
-    - vars/console-tools.yml
-  roles:
-    - install-applications
-
-- name: X11 Desktop Setup
-  hosts: all
-  become: true
-  roles:
-    - desktop-environment
-
-- name: Desktop Applications
-  hosts: all
-  become: true
-  vars_files:
-    - vars/desktop-apps.yml
-  roles:
-    - install-applications
-
-# - name: Install Fonts
+# - name: Common setup
 #   hosts: all
-#   vars_files:
-#     - vars/fonts.yml
+#   become: true
 #   roles:
-#     - install-nerdfonts
-#     - install-fonts
+#     - role: virtualbox-guest
+#       when: ansible_virtualization_type == "virtualbox"
+#         and ansible_virtualization_role == "guest"
+#     - pacman
+#     - setup-users
+#     - video-drivers
+#     # - systemd
+#     # - network
+#     # - security
+#     # - audio ??
+#     # - printer-install
+#     # - install-dev-frameworks
 
-- name: VM Applications
-  hosts: all
-  become: true
-  vars_files:
-    - vars/vm-applications.yml
-  roles:
-    - role: install-applications
-      when: ansible_virtualization_role != "guest"
+# - name: Console Tools
+#   hosts: all
+#   become: true
+#   vars_files:
+#     - vars/console-tools.yml
+#   roles:
+#     - install-applications
+
+# - name: X11 Desktop Setup
+#   hosts: all
+#   become: true
+#   roles:
+#     - desktop-environment
+
+# - name: Desktop Applications
+#   hosts: all
+#   become: true
+#   vars_files:
+#     - vars/desktop-apps.yml
+#   roles:
+#     - install-applications
+
+# # - name: Install Fonts
+# #   hosts: all
+# #   vars_files:
+# #     - vars/fonts.yml
+# #   roles:
+# #     - install-nerdfonts
+# #     - install-fonts
+
+# - name: VM Applications
+#   hosts: all
+#   become: true
+#   vars_files:
+#     - vars/vm-applications.yml
+#   roles:
+#     - role: install-applications
+#       when: ansible_virtualization_role != "guest"
