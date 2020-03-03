@@ -793,14 +793,6 @@ configure_pacman() {
       sed -i "${_has_repo}s/^#//" /mnt/etc/pacman.conf
     fi
   }
-
-  # Set up multilib
-  if [[ $SYS_ARCH == x86_64 ]]; then
-    setup_repo "multilib"
-    echo -e '\nMultilib repository added into pacman.conf file'
-
-    arch_chroot "pacman -Sy"
-  fi
 }
 
 pull_repo() {
