@@ -1,0 +1,12 @@
+---
+### Video card enumeration
+- name: Determine Number Of Video Cards
+  shell: lspci | grep VGA | wc -l
+  register: vidCount
+  changed_when: false
+
+- name: Determine Video Card Manufacturer
+  shell: lspci | grep VGA | tr "[:upper:]" "[:lower:]"
+  register: vidCard
+  changed_when: false
+######

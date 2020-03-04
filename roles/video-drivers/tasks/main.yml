@@ -1,18 +1,9 @@
 ---
-- name: Determine Number Of Video Cards
-  shell: lspci | grep VGA | wc -l
-  register: vidCount
-  changed_when: false
-
-- name: Determine Video Card Manufacturer
-  shell: lspci | grep VGA | tr "[:upper:]" "[:lower:]"
-  register: vidCard
-  changed_when: false
-
 # For now, I install these on every machine
 - name: Primary video drivers
   pacman:
     name:
+      - xf86-video-vesa
       - xf86-video-intel
       - xf86-video-amdgpu
       - xf86-video-nouveau
