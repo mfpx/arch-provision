@@ -634,7 +634,7 @@ install_base_system() {
   [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 5."
 
   # Remaining misc tools
-  pacstrap /mnt reflector git gvim openssh ansible terminus-font breeze-grub systemd-swap |& tee -a "${LOG}"
+  pacstrap /mnt reflector git gvim openssh ansible terminus-font systemd-swap |& tee -a "${LOG}"
   [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 6."
 
   # Add the ssh group
@@ -738,10 +738,10 @@ install_bootloader() {
   print_info "Install bootloader"
 
   if [[ $UEFI == 1 ]]; then
-    pacstrap /mnt grub os-prober |& tee -a "${LOG}"
+    pacstrap /mnt grub os-prober breeze-grub |& tee -a "${LOG}"
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 7."
   else
-    pacstrap /mnt grub-bios os-prober |& tee -a "${LOG}"
+    pacstrap /mnt grub-bios os-prober breeze-grub |& tee -a "${LOG}"
     [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 8."
   fi
 
@@ -760,7 +760,7 @@ configure_bootloader() {
   fi
 
   # Update grub config
-  sed -i '/^GRUB_TIMEOUT/c\GRUB_TIMEOUT=8' /mnt/etc/default/grub |& tee -a "${LOG}"
+  sed -i '/^GRUB_TIMEOUT/c\GRUB_TIMEOUT=5' /mnt/etc/default/grub |& tee -a "${LOG}"
   # shellcheck disable=SC2016
   sed -i '/^GRUB_DISTRIBUTOR/c\GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Arch`' /mnt/etc/default/grub |& tee -a "${LOG}"
 
@@ -773,6 +773,7 @@ configure_bootloader() {
   sed -i '/^GRUB_GFXMODE/c\GRUB_GFXMODE=1024x768x32,1024x768x24,1024x768,auto' /mnt/etc/default/grub |& tee -a "${LOG}"
   sed -i '/^GRUB_DISABLE_RECOVERY/c\#GRUB_DISABLE_RECOVERY=true' /mnt/etc/default/grub |& tee -a "${LOG}"
   sed -i '/^GRUB_THEME/c\GRUB_THEME="/usr/share/grub/themes/breeze/theme.txt"' /mnt/etc/default/grub |& tee -a "${LOG}"
+  sed -i '/^#GRUB_THEME/c\GRUB_THEME="/usr/share/grub/themes/breeze/theme.txt"' /mnt/etc/default/grub |& tee -a "${LOG}"
   sed -i '/^#GRUB_INIT_TUNE/c\GRUB_INIT_TUNE="480 440 1"' /mnt/etc/default/grub |& tee -a "${LOG}"
 
   # Make the config
@@ -800,6 +801,9 @@ configure_pacman() {
       sed -i "${_has_repo}s/^#//" /mnt/etc/pacman.conf
     fi
   }
+
+  sed -i '/^#Color/c\Color' /mnt/etc/pacman.conf |& tee -a "${LOG}"
+  sed -i '/^#TotalDownload/c\TotalDownload' /mnt/etc/pacman.conf |& tee -a "${LOG}"
 }
 
 pull_repo() {
