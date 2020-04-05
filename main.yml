@@ -3,7 +3,7 @@
 # The exception is the SSH role.  It can potentially lock you out of a machine
 # by a misconfigured SSH config so it is run here.  If it causes issues in this
 # main script it can be removed.
-- name: Bootstrap setup
+- name: Bootstrap Setup
   hosts: all
   become: true
   vars_files:
@@ -27,15 +27,18 @@
   roles:
     - yay
 
-- name: Common setup
+- name: Core System Setup
   hosts: all
   become: true
+  vars_files:
+    - vars/core-system-tools.yml
   roles:
     # This role should be up in bootstrap, however it requires yay
     - role: virtualbox-guest
       when: ansible_virtualization_type == "virtualbox"
         and ansible_virtualization_role == "guest"
     # These others belong here
+    - install-applications
     - pacman
     - setup-users
     - video-drivers
@@ -53,12 +56,11 @@
     - vars/console-tools.yml
   roles:
     - install-applications
-
-- name: X11 Desktop Setup
-  hosts: all
-  become: true
-  roles:
-    - desktop-environment
+# - name: X11 Desktop Setup
+#   hosts: all
+#   become: true
+#   roles:
+#     - desktop-environment
 # - name: Desktop Applications
 #   hosts: all
 #   become: true

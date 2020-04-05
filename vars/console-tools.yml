@@ -1,6 +1,4 @@
 ---
 package_set: "Console Applications"
 pacman_packages:
-  - rsync
 aur_packages:
-  - rcm

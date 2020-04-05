@@ -1,0 +1,14 @@
+---
+package_set: "Core System Tools"
+pacman_packages:
+  - gd
+  - words
+  - mlocate
+  - ed
+  - lzop
+  - ntfs-3g
+  - bash-completion
+  - rsync
+  - python-pip
+aur_packages:
+  - rcm
