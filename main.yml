@@ -42,6 +42,7 @@
     - pacman
     - setup-users
     - video-drivers
+    - audio
     # - systemd
     # - network
     # - security

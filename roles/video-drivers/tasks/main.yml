@@ -21,6 +21,9 @@
       - libxss
       - vulkan-mesa-layer
       - intel-media-driver
+      - intel-media-sdk
+      - intel-compute-runtime
+      - glu
     state: present
 #TODO: Build out a laptop one that uses PRIME for both the NVIDIA (proprietary) and
 # Intel graphics drivers at the same time.  Only on machines with both graphics cards.

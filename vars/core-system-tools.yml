@@ -33,6 +33,11 @@ pacman_packages:
   - biber
   - texlive-most
   - lhasa
+  - clang
+  - llvm
+  - openmp
+  - gcc-fortran
+  - boost-libs
 aur_packages:
   - rcm
   - jdk11-adoptopenjdk
