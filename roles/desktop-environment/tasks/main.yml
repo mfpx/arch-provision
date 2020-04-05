@@ -3,14 +3,15 @@
   pacman:
     name:
       - xorg-server
-      - mesa
-      - libglvnd
       - xorg-xinput
       - xorg-xkill
       - xorg-server-xwayland
       - xorg-xinit
       - xorg-xrandr
       - xterm
+      - xdg-user-dirs
+      - xorg-fonts-alias
+      - x11-ssh-askpass
     state: present
 
 - name: Install KDE
@@ -39,17 +40,6 @@
 #    group: root
 #    mode: 0644
 #    backup: true
-
-- name: Install i3
-  pacman:
-    name:
-      - i3-gaps
-      - i3blocks
-      - i3lock
-      - i3status
-      - dmenu
-      - rofi
-    state: present
 
 - name: Install Theme Assets
   pacman:
