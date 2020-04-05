@@ -1,15 +1,38 @@
 ---
 package_set: "Core System Tools"
 pacman_packages:
+  - man
   - gd
   - words
   - mlocate
   - ed
   - lzop
+  - crda
   - ntfs-3g
   - cifs-utils
   - bash-completion
   - rsync
   - python-pip
+  - mpdecimal
+  - tcl
+  - tk
+  - libusb-compat
+  - pcsclite
+  - netpbm
+  - psutils
+  - libevent
+  - ruby
+  - ruby-docs
+  - lua
+  - libfido2
+  - sshpass
+  - acme-tiny
+  - libisoburn
+  - freeglut
+  - biber
+  - texlive-most
+  - lhasa
 aur_packages:
   - rcm
+  - jdk11-adoptopenjdk
+  - jdk-adoptopenjdk

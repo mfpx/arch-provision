@@ -49,11 +49,11 @@
     # - printer-install
     # - install-dev-frameworks
 
-- name: Console Tools
+- name: Terminal Applications
   hosts: all
   become: true
   vars_files:
-    - vars/console-tools.yml
+    - vars/terminal-apps.yml
   roles:
     - install-applications
 # - name: X11 Desktop Setup
