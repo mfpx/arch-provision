@@ -5,6 +5,7 @@
     state: present
 
 - name: Install aur packages ({{ package_set }})
+  become: false
   yay:
     name: "{{ item }}"
     state: present
