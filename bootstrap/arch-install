@@ -630,7 +630,7 @@ install_base_system() {
   [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 4."
 
   # Install networking tools
-  pacstrap /mnt net-tools dialog networkmanager networkmanager-openvpn iw wireless_tools wpa_supplicant |& tee -a "${LOG}"
+  pacstrap /mnt dialog networkmanager networkmanager-openvpn iw wireless_tools wpa_supplicant |& tee -a "${LOG}"
   [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 5."
 
   # Remaining misc tools
