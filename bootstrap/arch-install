@@ -651,7 +651,7 @@ install_virtualization() {
     # In virtualbox
     print_info "Installing VirtualBox Additions"
 
-    pacstrap /mnt virtualbox-guest-utils virtualbox-guest-dkms |& tee -a "${LOG}"
+    pacstrap /mnt xf86-video-vmware virtualbox-guest-utils virtualbox-guest-dkms |& tee -a "${LOG}"
     [[ $? -ne 0 ]] && error_msg "Installing virtualization to /mnt failed. Check error messages above."
 
     arch_chroot "systemctl enable vboxservice.service"
