@@ -252,7 +252,7 @@ ask_for_hostname() {
   fi
 
   if [[ ${ai_automatic_install:-} == 1 ]]; then
-    HOST_NAME="arch-$((1 + RANDOM % 1000))"
+    HOST_NAME="arch-$((1 + RANDOM % 1000)).tts.lan"
     return
   fi
 
@@ -260,7 +260,7 @@ ask_for_hostname() {
   print_title_info "Pick a hostname for this machine.  Press enter to have a random hostname selected."
   read -rp "Hostname [ex: archlinux]: " HOST_NAME
   if [[ $HOST_NAME == "" ]]; then
-    HOST_NAME="arch-$((1 + RANDOM % 1000))"
+    HOST_NAME="arch-$((1 + RANDOM % 1000)).tts.lan"
   fi
 }
 
@@ -678,8 +678,15 @@ configure_hostname() {
   print_info "Setup hostname"
 
   echo "$HOST_NAME" >/mnt/etc/hostname
-  arch_chroot "sed -i '/127.0.0.1/s/$/ '${HOST_NAME}'/' /etc/hosts"
-  arch_chroot "sed -i '/::1/s/$/ '${HOST_NAME}'/' /etc/hosts"
+
+  # Add the lines in case they are not in the file...
+  arch_chroot "grep -q '^127.0.0.1\s' /etc/hosts || echo '127.0.0.1  temp' >> /etc/hosts"
+  arch_chroot "grep -q '^::1\s' /etc/hosts || echo '::1  temp' >> /etc/hosts"
+  arch_chroot "grep -q '^127.0.1.1\s' /etc/hosts || echo '127.0.1.1  temp' >> /etc/hosts"
+  # Now put in the proper values
+  arch_chroot "sed -i 's/^127.0.0.1\s.*$/127.0.0.1  localhost/' /etc/hosts"
+  arch_chroot "sed -i 's/^::1\s.*$/::1  localhost/' /etc/hosts"
+  arch_chroot "sed -i 's/^127.0.1.1\s.*$/127.0.1.1  '${HOST_NAME}' '${HOST_NAME%%.*}'/' /etc/hosts"
 }
 
 configure_timezone() {
