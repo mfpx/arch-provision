@@ -17,9 +17,10 @@
     groups: "vboxsf"
     append: true
 
-- name: Install Virtualbox Utils
+- name: Install VirtualBox Utils
   pacman:
     name:
+      - xf86-video-vmware
       - virtualbox-guest-utils
       - virtualbox-guest-dkms
     state: present
@@ -43,7 +44,7 @@
     mode: 0755
     backup: false
 
-- name: Enable Virtualbox Service
+- name: Enable VirtualBox Service
   service:
     name: vboxservice.service
     state: started
