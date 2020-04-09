@@ -1,0 +1,29 @@
+---
+- name: Install Apparmor
+  pacman:
+    name:
+      - apparmor # Here just for Snap
+    state: present
+
+- name: Install Snapd
+  become: false
+  yay:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - snapd
+
+- name: Enable Apparmor Service
+  service:
+    name: apparmor.service
+    enabled: true
+
+- name: Enable Snapd Apparmor Service
+  service:
+    name: snapd.apparmor.service
+    enabled: true
+
+- name: Enable Snapd Socket
+  service:
+    name: snapd.socket
+    enabled: true

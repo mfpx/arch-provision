@@ -56,6 +56,17 @@ pacman_packages:
   - dash
   - zsh
   - tmux
+  - hunspell
+  - aspell
+  - flite
+  - speech-dispatcher
+  - festival
+  - espeak-ng
+  - espeak-ng-espeak
+  - gnuplot
+  - squashfs-tools
+  - go-tools
+  - libappimage
 aur_packages:
   - rcm
   - jdk11-adoptopenjdk

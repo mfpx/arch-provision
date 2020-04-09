@@ -45,6 +45,8 @@
     - audio
     - printing
     - networking
+    - security
+    - snapd
 
 - name: Terminal Applications
   hosts: all
@@ -59,7 +61,7 @@
   become: true
   roles:
     - xorg-install
-    - kde-desktop-environment
+#    - kde-desktop-environment
 #- name: Desktop Applications
 #   hosts: all
 #   become: true
