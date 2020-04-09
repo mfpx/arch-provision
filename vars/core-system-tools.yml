@@ -10,6 +10,7 @@ pacman_packages:
   - crda
   - ntfs-3g
   - cifs-utils
+  - udisks2
   - bash-completion
   - rsync
   - python-pip
@@ -38,6 +39,9 @@ pacman_packages:
   - openmp
   - gcc-fortran
   - boost-libs
+  - logrotate
+  - amd-ucode
+  - intel-ucode
 aur_packages:
   - rcm
   - jdk11-adoptopenjdk
