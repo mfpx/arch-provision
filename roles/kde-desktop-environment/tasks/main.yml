@@ -1,19 +1,4 @@
 ---
-- name: Install xorg server
-  pacman:
-    name:
-      - xorg-server
-      - xorg-xinput
-      - xorg-xkill
-      - xorg-server-xwayland
-      - xorg-xinit
-      - xorg-xrandr
-      - xterm
-      - xdg-user-dirs
-      - xorg-fonts-alias
-      - x11-ssh-askpass
-    state: present
-
 - name: Install KDE
   pacman:
     name:

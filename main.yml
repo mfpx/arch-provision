@@ -53,12 +53,14 @@
     - vars/terminal-apps.yml
   roles:
     - install-applications
-# - name: X11 Desktop Setup
-#   hosts: all
-#   become: true
-#   roles:
-#     - desktop-environment
-# - name: Desktop Applications
+
+- name: KDE Desktop Environment Setup
+  hosts: all
+  become: true
+  roles:
+    - xorg-install
+    - kde-desktop-environment
+#- name: Desktop Applications
 #   hosts: all
 #   become: true
 #   vars_files:
