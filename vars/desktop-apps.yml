@@ -3,6 +3,7 @@ package_set: "Desktop/GUI Applications"
 pacman_packages:
   - kompare
   - meld
+  - mkvtoolnix-cli
 aur_packages:
   - bcompare
   - bcompare-kde5

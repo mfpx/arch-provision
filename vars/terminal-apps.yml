@@ -1,4 +1,5 @@
 ---
-package_set: "Console Applications"
+package_set: "Terminal Applications"
 pacman_packages:
+  - cmus
 aur_packages:
