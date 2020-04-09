@@ -26,6 +26,12 @@
       - pulseaudio-lirc
       - pulseaudio-zeroconf
       - alsa-tools
+      - libao
+      - libmad
+      - libmp4v2
+      - libcdio-paranoia
+      - opusfile
+      - mkvtoolnix-cli
     state: present
 
 - name: Enable Bluetooth Service
