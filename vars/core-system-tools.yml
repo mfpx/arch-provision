@@ -6,11 +6,22 @@ pacman_packages:
   - words
   - mlocate
   - ed
+  - lzip
   - lzop
+  - lrzip
+  - cpio
+  - p7zip
+  - unrar
+  - zip
+  - unzip
+  - atool
   - crda
   - ntfs-3g
   - cifs-utils
+  - nfs-utils
+  - sshfs
   - udisks2
+  - hdparm
   - bash-completion
   - rsync
   - python-pip
@@ -42,6 +53,9 @@ pacman_packages:
   - logrotate
   - amd-ucode
   - intel-ucode
+  - dash
+  - zsh
+  - tmux
 aur_packages:
   - rcm
   - jdk11-adoptopenjdk
