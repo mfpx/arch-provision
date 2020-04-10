@@ -70,7 +70,12 @@ pacman_packages:
   - squashfs-tools
   - go
   - go-tools
+  - cmake
+  - extra-cmake-modules
+  - libuv
   - libappimage
+  - rhash
+  - jsoncpp
 aur_packages:
   - rcm
   - jdk11-adoptopenjdk
