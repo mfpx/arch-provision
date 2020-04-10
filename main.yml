@@ -21,12 +21,6 @@
     - locale
     - ssh
 
-- name: Yay
-  hosts: all
-  become: false
-  roles:
-    - yay
-
 - name: Core System Setup
   hosts: all
   become: true
@@ -38,15 +32,14 @@
       when: ansible_virtualization_type == "virtualbox"
         and ansible_virtualization_role == "guest"
     # These others belong here
+    - installers
     - install-applications
-    - pacman
     - setup-users
     - video-drivers
     - audio
     - printing
     - networking
     - security
-    - snapd
 
 - name: Terminal Applications
   hosts: all

@@ -68,6 +68,7 @@ pacman_packages:
   - espeak-ng-espeak
   - gnuplot
   - squashfs-tools
+  - go
   - go-tools
   - libappimage
 aur_packages:
