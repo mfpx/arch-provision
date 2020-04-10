@@ -8,6 +8,7 @@
       - xorg-server-xwayland
       - xorg-xinit
       - xorg-xrandr
+      - xorg-xwininfo
       - xterm
       - xdg-user-dirs
       - xorg-fonts-alias
