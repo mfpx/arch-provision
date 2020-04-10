@@ -19,6 +19,7 @@ pacman_packages:
   - unshield
   - atool
   - crda
+  - exfat-utils
   - ntfs-3g
   - cifs-utils
   - nfs-utils

@@ -2,65 +2,122 @@
 - name: Install KDE
   pacman:
     name:
+      # KDE Core
       - phonon-qt5-gstreamer
-      - libx264
+      - python-pyqt5
       - plasma-meta
       - plasma-wayland-session
-      - kdebase-meta
-      - kdeutils-meta
-      - dolphin-plugins
-      - kde-gtk-config
+      - sddm
+      # Basics missing and optional packages
+      - qt5-tools
+      - qt5-webkit
+      - kio-extras
+      - kdoctools
+      - kio-fuse
+      - kimageformats
+      - qt5-imageformats
+      - karchive
+      - packagekit-qt5
+      - qt5-virtualkeyboard
+      - noto-fonts-emoji
+      - noto-fonts-extra
+      - qt5-charts
+      - appmenu-gtk-module
+      - fwupd
+      - pipewire-jack
+      - pipewire-pulse
+      - sddm-kcm
+      - kdeconnect
+      - system-config-printer
+      - gnome-keyring
+      - colord-kde
+      - ttf-dejavu
+      - ttf-liberation
+      - phonon-qt5-vlc
+      - libappindicator-gtk3
+      - nm-connection-editor
     state: present
+
+# These are apps I would likely NOT install on a non-KDE system but are nice to
+# have in a KDE system
+- name: Install KDE Apps
+  pacman:
+    name:
+      - kdeaccessibility-meta
+      - kdebase-meta
+      - kdeadmin-meta
+      - kdegraphics-meta
+      - kdeutils-meta
+      - ffmpegthumbs
+      - k3b
+      - kamoso
+      - kdenetwork-filesharing
+      - kget
+      - krdc
+      - krfb
+      - dolphin-plugins
+      - kompare
+      - partitionmanager
+    state: present
+
+- name: Install KDE AUR Tools
+  become: false
+  yay:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - systemd-kcm
+    - bcompare
+    - bcompare-kde5
 
 - name: Enable SDDM
   service:
     name: sddm.service
     enabled: true
 
-#- name: Set SDDM config
-#  template:
-#    src: etc--sddm.conf.j2
-#    dest: /etc/sddm.conf
-#    owner: root
-#    group: root
-#    mode: 0644
-#    backup: true
+- name: Setup Firewall rule for KDEConnect
+  firewalld:
+    service: kdeconnect
+    state: enabled
+    permanent: yes
+    zone: home
 
-- name: Install Theme Assets
-  pacman:
-    name:
-      - arc-gtk-theme
-      - arc-kde
-      - adapta-gtk-theme
-      - adapta-kde
-      - papirus-icon-theme
-      # - kvantum-theme-arc
-      # - kvantum-theme-adapta
-      - arc-icon-theme
-      - gnome-themes-extra
-      - gnome-icon-theme
-      - gnome-icon-theme-symbolic
-      - gnome-icon-theme-extras
-      - capitaine-cursors
-    state: present
+- name: Setup SDDM config
+  template:
+    src: etc--sddm.conf.j2
+    dest: /etc/sddm.conf
+    owner: root
+    group: root
+    mode: 0644
+    backup: true
+# - name: Install Theme Assets
+#   pacman:
+#     name:
+#       - arc-gtk-theme
+#       - arc-kde
+#       - adapta-gtk-theme
+#       - adapta-kde
+#       - papirus-icon-theme
+#       # - kvantum-theme-arc
+#       # - kvantum-theme-adapta
+#       - arc-icon-theme
+#       - gnome-themes-extra
+#       - gnome-icon-theme
+#       - gnome-icon-theme-symbolic
+#       - gnome-icon-theme-extras
+#       - capitaine-cursors
+#     state: present
 
-#- name: Install AUR KCM's
-#  become: false
-#  aurman:
-#    name:
-#      - systemd-kcm
-#    state: present
-
-- name: Install Theme Assets (AUR)
-  become: false
-  yay:
-    name: "{{ item }}"
-    state: present
-  with_items:
-    - numix-cursor-theme-git
-    - numix-gtk-theme-git
-    - numix-kde-theme-git
-    - numix-icon-theme-git
-    - numix-circle-icon-theme-git
-    - numix-square-icon-theme-git
-    - numix-folders-git # not working
+# - name: Install Theme Assets (AUR)
+#   become: false
+#   yay:
+#     name: "{{ item }}"
+#     state: present
+#   with_items:
+#     - numix-cursor-theme-git
+#     - numix-gtk-theme-git
+#     - numix-kde-theme-git
+#     - numix-icon-theme-git
+#     - numix-circle-icon-theme-git
+#     - numix-square-icon-theme-git
+#     - numix-folders-git # not working

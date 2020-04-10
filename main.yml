@@ -54,7 +54,7 @@
   become: true
   roles:
     - xorg-install
-#    - kde-desktop-environment
+    - kde-desktop-environment
 #- name: Desktop Applications
 #   hosts: all
 #   become: true
