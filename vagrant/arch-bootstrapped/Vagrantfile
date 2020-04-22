@@ -36,12 +36,6 @@ Vagrant.configure(2) do |config|
       ansible.ask_become_pass = true
       ansible.compatibility_mode = "2.0"
     end
-    config.vm.provision "update", type: "ansible" do |ansible|
-      ansible.playbook = "../../update.yml"
-      ansible.config_file = "ansible.cfg"
-      ansible.ask_become_pass = true
-      ansible.compatibility_mode = "2.0"
-    end
     config.vm.provision "upgrade", type: "ansible" do |ansible|
       ansible.playbook = "../../upgrade.yml"
       ansible.config_file = "ansible.cfg"
