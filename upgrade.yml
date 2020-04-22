@@ -1,6 +1,7 @@
 ---
 - name: Install Updates
   hosts: all
+  become: true
   gather_facts: false
   roles:
     - upgrade
