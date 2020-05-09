@@ -1,10 +1,12 @@
 ---
 package_set: "Desktop/GUI Applications"
 pacman_packages:
-  - kompare
+  - firefox
   - meld
-  - mkvtoolnix-cli
+  - vlc
+  - code
+  - emacs
 aur_packages:
   - bcompare
-  - bcompare-kde5
-  - google-chrome
+  #- google-chrome
+  - ungoogled-chromium

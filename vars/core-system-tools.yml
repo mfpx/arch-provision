@@ -29,6 +29,7 @@ pacman_packages:
   - bash-completion
   - rsync
   - python-pip
+  - python2-pip
   - mpdecimal
   - mcpp
   - tcl
@@ -59,9 +60,12 @@ pacman_packages:
   - intel-ucode
   - dash
   - zsh
+  - zsh-completions
   - tmux
   - hunspell
+  - hunspell-en_US
   - aspell
+  - aspell-en
   - flite
   - speech-dispatcher
   - festival
@@ -77,6 +81,24 @@ pacman_packages:
   - libappimage
   - rhash
   - jsoncpp
+  - vcdimager
+  - gnu-free-fonts
+  - libnfs
+  - protobuf
+  - libmicrodns
+  - live-media
+  - libmediawiki
+  - chmlib
+  - unarchiver
+  - cdrtools
+  - cdrdao
+  - transcode
+  - libquicktime
+  - yasm
+  - nodejs
+  - npm
+  - cronie
+  - samba
 aur_packages:
   - rcm
   - jdk11-adoptopenjdk

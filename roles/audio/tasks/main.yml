@@ -16,6 +16,7 @@
       - libdvdcss
       - libheif
       - libraw
+      - faac
       - libwmf
       - ocl-icd
       - bluez-utils

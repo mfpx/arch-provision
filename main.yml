@@ -11,6 +11,7 @@
   roles:
     - hostname
     - pacman-config
+    - upgrade
     - install-applications
     - bootloader-config
     - sudo
@@ -27,12 +28,12 @@
   vars_files:
     - vars/core-system-tools.yml
   roles:
+    - installers
     # This role should be up in bootstrap, however it requires yay
     - role: virtualbox-guest
       when: ansible_virtualization_type == "virtualbox"
         and ansible_virtualization_role == "guest"
     # These others belong here
-    - installers
     - install-applications
     - setup-users
     - video-drivers
@@ -55,14 +56,14 @@
   roles:
     - xorg-install
     - kde-desktop-environment
-#- name: Desktop Applications
-#   hosts: all
-#   become: true
-#   vars_files:
-#     - vars/desktop-apps.yml
-#   roles:
-#     - install-applications
 
+- name: Shared Desktop Applications
+  hosts: all
+  become: true
+  vars_files:
+    - vars/desktop-apps.yml
+  roles:
+    - install-applications
 # # - name: Install Fonts
 # #   hosts: all
 # #   vars_files:

@@ -11,6 +11,7 @@
       # Basics missing and optional packages
       - qt5-tools
       - qt5-webkit
+      - qt5-xmlpatterns
       - kio-extras
       - kdoctools
       - kio-fuse
@@ -35,6 +36,7 @@
       - ttf-liberation
       - phonon-qt5-vlc
       - libappindicator-gtk3
+      - libktorrent
       - nm-connection-editor
     state: present
 
@@ -58,6 +60,7 @@
       - dolphin-plugins
       - kompare
       - partitionmanager
+      - freerdp
     state: present
 
 - name: Install KDE AUR Tools

@@ -13,4 +13,6 @@
       - xdg-user-dirs
       - xorg-fonts-alias
       - x11-ssh-askpass
+      - desktop-file-utils
+      - xdg-utils
     state: present
