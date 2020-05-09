@@ -1,6 +1,6 @@
 {
   "variables": {
-    "iso_version": "2020.03.01"
+    "iso_version": "2020.05.01"
   },
   "builders": [
     {
