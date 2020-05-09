@@ -64,14 +64,13 @@
     - vars/desktop-apps.yml
   roles:
     - install-applications
-# # - name: Install Fonts
-# #   hosts: all
-# #   vars_files:
-# #     - vars/fonts.yml
-# #   roles:
-# #     - install-nerdfonts
-# #     - install-fonts
 
+- name: Install Fonts
+  hosts: all
+  vars_files:
+    - vars/fonts.yml
+  roles:
+    - install-applications
 # - name: VM Applications
 #   hosts: all
 #   become: true
