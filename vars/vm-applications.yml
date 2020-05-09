@@ -1,12 +1,15 @@
 ---
 package_set: "VM Applications"
 pacman_packages:
+  - lxc
   - qemu
   - virt-manager
   - virt-viewer
   - virtualbox
   - virtualbox-host-dkms
+  - virtualbox-sdk
   - vagrant
+  - packer
   - docker
   - docker-compose
 aur_packages:

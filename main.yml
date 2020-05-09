@@ -67,15 +67,17 @@
 
 - name: Install Fonts
   hosts: all
+  become: true
   vars_files:
     - vars/fonts.yml
   roles:
     - install-applications
-# - name: VM Applications
-#   hosts: all
-#   become: true
-#   vars_files:
-#     - vars/vm-applications.yml
-#   roles:
-#     - role: install-applications
-#       when: ansible_virtualization_role != "guest"
+
+- name: VM Applications
+  hosts: all
+  become: true
+  vars_files:
+    - vars/vm-applications.yml
+  roles:
+    - role: install-applications
+      when: ansible_virtualization_role != "guest"
