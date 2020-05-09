@@ -99,6 +99,7 @@ pacman_packages:
   - npm
   - cronie
   - samba
+  - zerotier-one
 aur_packages:
   - rcm
   - jdk11-adoptopenjdk
