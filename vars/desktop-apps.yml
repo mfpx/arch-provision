@@ -9,4 +9,4 @@ pacman_packages:
 aur_packages:
   - bcompare
   #- google-chrome
-  - ungoogled-chromium
+  #- ungoogled-chromium

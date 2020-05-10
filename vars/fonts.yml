@@ -1,5 +1,5 @@
 ---
-package_set: "Fonts"
+package_set: 'Fonts'
 pacman_packages:
   - noto-fonts
   - noto-fonts-emoji
@@ -23,7 +23,7 @@ pacman_packages:
 #  - ttf-dejavu
 #  - ttf-ubuntu-font-family
 aur_packages:
-  - ttf-ms-win10
+  #  - ttf-ms-win10
   - nerd-fonts-arimo
   - nerd-fonts-cascadia-code
   - nerd-fonts-hack
