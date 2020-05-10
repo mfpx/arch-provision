@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 ###############################################################################
 # Dynamic DNS inventory script for Ansible
@@ -45,9 +45,10 @@ from collections import defaultdict
 import json
 
 # The domain we are querying.
-domain = 'todaytechsoft.com'
+domain = 'tts.lan'
 # We sort results in reverse alphabetical order to make parsing easier.
 records = sorted(dns.resolver.query(domain, 'TXT'), reverse=True)
+
 
 class DNSInventory(object):
 
@@ -66,7 +67,7 @@ class DNSInventory(object):
         else:
             self.inventory = self.empty_inventory()
 
-        print json.dumps(self.inventory, indent=4);
+        print(json.dumps(self.inventory, indent=4))
 
     # Generate our DNS inventory
     def dns_inventory(self):
@@ -95,30 +96,43 @@ class DNSInventory(object):
                         if store['hostname'] not in inventory['_meta']['hostvars']:
                             inventory['_meta']['hostvars'][store['hostname']] = {}
                         var, val = hostvar.split(':')
-                        inventory['_meta']['hostvars'][store['hostname']].update({var: val})
-                elif ('group' in store) and ('vars' in store):
-                    for group in inventory:
-                        if store['group'] == group:
+                        value = val[1:-1].split('|') if val.startswith(
+                            '[') and val.endswith(']') else val
+                        inventory['_meta']['hostvars'][store['hostname']].update({
+                                                                                 var: value})
+            elif ('group' in store) and ('vars' in store or 'children' in store):
+                if store['group'] not in inventory:
+                    inventory[store['group']] = {'hosts': []}
+                for group in inventory:
+                    if store['group'] == group:
+                        if ('vars' in store):
                             if 'vars' not in group:
                                 inventory[group].update({'vars': {}})
-                        for groupvar in store['vars'].split(','):
-                            var, val = groupvar.split(':')
-                            inventory[group]['vars'].update({var: val})
+                            for groupvar in store['vars'].split(','):
+                                var, val = groupvar.split(':')
+                                value = val[1:-1].split('|') if val.startswith(
+                                    '[') and val.endswith(']') else val
+                                inventory[group]['vars'].update({var: value})
+                        if ('children' in store):
+                            if 'children' not in group:
+                                inventory[group].update({'children': []})
+                            for child in store['children'].split(','):
+                                inventory[group]['children'].append(child)
         return(inventory)
 
-
     # Empty inventory for testing.
+
     def empty_inventory(self):
         return {'_meta': {'hostvars': {}}}
 
-
     # Read the command line args passed to the script.
+
     def read_cli_args(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument('--list', action = 'store_true')
-        parser.add_argument('--host', action = 'store')
+        parser.add_argument('--list', action='store_true')
+        parser.add_argument('--host', action='store')
         self.args = parser.parse_args()
+
 
 # Get the inventory
 DNSInventory()
-
