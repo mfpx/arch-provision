@@ -45,9 +45,9 @@ from collections import defaultdict
 import json
 
 # The domain we are querying.
-domain = 'tts.lan'
+domain = 'shitbox.plebnet'
 # We sort results in reverse alphabetical order to make parsing easier.
-records = sorted(dns.resolver.query(domain, 'TXT'), reverse=True)
+records = sorted(dns.resolver.resolve(domain, 'TXT'), reverse=True)
 
 
 class DNSInventory(object):

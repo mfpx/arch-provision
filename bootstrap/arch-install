@@ -30,15 +30,15 @@ echo "Start log..." >>"${LOG}"
 
 # Flags and variables
 SYS_ARCH=$(uname -m) # Architecture (x86_64)
-UEFI=0
+UEFI=0 # Assume no UEFI by default
 XPINGS=0 # CONNECTION CHECK
-KEYMAP="us"
+KEYMAP="uk"
 
 # User provided variables
 HOST_NAME="computer"
 KERNEL_VERSION="default"
 DUAL_DISK=0
-MAIN_DISK="/dev/sda"
+MAIN_DISK="/dev/sda" # Will fail on non-SCSI/SATA devices
 SECOND_DISK=""
 ROOT_PWD=""
 ANSIBLE_PWD=""
@@ -252,7 +252,7 @@ ask_for_hostname() {
   fi
 
   if [[ ${ai_automatic_install:-} == 1 ]]; then
-    HOST_NAME="arch-$((1 + RANDOM % 1000)).tts.lan"
+    HOST_NAME="arch-$((1 + RANDOM % 1000)).shitbox.plebnet"
     return
   fi
 
@@ -260,7 +260,7 @@ ask_for_hostname() {
   print_title_info "Pick a hostname for this machine.  Press enter to have a random hostname selected."
   read -rp "Hostname [ex: archlinux]: " HOST_NAME
   if [[ $HOST_NAME == "" ]]; then
-    HOST_NAME="arch-$((1 + RANDOM % 1000)).tts.lan"
+    HOST_NAME="arch-$((1 + RANDOM % 1000)).shitbox.plebnet"
   fi
 }
 
@@ -646,6 +646,14 @@ install_base_system() {
   arch_chroot "systemctl enable sshd.service"
 }
 
+setup_python() {
+  # Install Python pip
+  arch_chroot "python -m ensurepip --upgrade"
+
+  # Install Python DNS package for Ansible scripting
+  arch_chroot "pip install dnspython"
+}
+
 install_virtualization() {
   if [[ $(systemd-detect-virt) == "oracle" ]]; then
     # In virtualbox
@@ -949,6 +957,7 @@ format_partitions
 mount_partitions
 
 install_base_system
+setup_python
 install_virtualization
 configure_keymap
 configure_fstab
