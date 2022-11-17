@@ -634,7 +634,7 @@ install_base_system() {
   [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 5."
 
   # Remaining misc tools
-  pacstrap /mnt reflector git gvim openssh ansible terminus-font systemd-swap |& tee -a "${LOG}"
+  pacstrap /mnt reflector git gvim openssh ansible terminus-font systemd-swap nano |& tee -a "${LOG}"
   [[ $? -ne 0 ]] && error_msg "Installing base system to /mnt failed. Check error messages above. Part 6."
 
   # Add the ssh group
@@ -650,8 +650,11 @@ setup_python() {
   # Install Python pip
   arch_chroot "python -m ensurepip --upgrade"
 
+  # Symlink pip3 to pip
+  arch_chroot "ln -sf /usr/bin/pip3 /usr/bin/pip && sync"
+
   # Install Python DNS package for Ansible scripting
-  arch_chroot "pip install dnspython"
+  arch_chroot "pip3 install dnspython"
 }
 
 install_virtualization() {
@@ -673,7 +676,7 @@ install_virtualization() {
 configure_keymap() {
   print_info "Configure keymap"
   echo "KEYMAP=$KEYMAP" >/mnt/etc/vconsole.conf
-  echo "FONT=ter-120n" >>/mnt/etc/vconsole.conf
+  echo "FONT=ter-116n" >>/mnt/etc/vconsole.conf
 }
 
 configure_fstab() {
@@ -778,7 +781,7 @@ configure_bootloader() {
     sed -i '/^GRUB_CMDLINE_LINUX_DEFAULT/c\GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"' /mnt/etc/default/grub |& tee -a "${LOG}"
   fi
 
-  sed -i '/^GRUB_GFXMODE/c\GRUB_GFXMODE=1024x768x32,1024x768x24,1024x768,auto' /mnt/etc/default/grub |& tee -a "${LOG}"
+  sed -i '/^GRUB_GFXMODE/c\GRUB_GFXMODE=1024x768x24,1024x768x20,1024x768,auto' /mnt/etc/default/grub |& tee -a "${LOG}"
   sed -i '/^GRUB_DISABLE_RECOVERY/c\#GRUB_DISABLE_RECOVERY=true' /mnt/etc/default/grub |& tee -a "${LOG}"
   sed -i '/^GRUB_THEME/c\GRUB_THEME="/usr/share/grub/themes/breeze/theme.txt"' /mnt/etc/default/grub |& tee -a "${LOG}"
   sed -i '/^#GRUB_THEME/c\GRUB_THEME="/usr/share/grub/themes/breeze/theme.txt"' /mnt/etc/default/grub |& tee -a "${LOG}"
